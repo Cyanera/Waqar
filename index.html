@@ -216,6 +216,23 @@
     margin-top:10px;
     flex-wrap:wrap;
   }
+
+  .custom-duration-wrap{margin-top:14px;display:none;}
+  .custom-duration-wrap.show{display:block;}
+  .custom-duration-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .custom-duration-grid label{
+    display:block;
+    font-weight:600;
+    font-size:.85rem;
+    margin-bottom:6px;
+    color:var(--slate);
+  }
+  .custom-duration-grid input{max-width:100%;}
+  #customDurationTotal{font-weight:700;color:var(--olive);}
   input[type="number"], input[type="date"]{
     font-family:"Cairo",sans-serif;
     font-variant-numeric: tabular-nums;
@@ -504,10 +521,25 @@
             <button type="button" class="pill" data-duration="180" aria-pressed="false">٦ أشهر</button>
             <button type="button" class="pill" data-duration="365" aria-pressed="false">سنة</button>
             <button type="button" class="pill" data-duration="730" aria-pressed="false">سنتين</button>
+            <button type="button" class="pill" id="otherDurationBtn" aria-pressed="false">غير ذلك</button>
           </div>
-          <div class="num-input-wrap">
-            <label for="durationInput" style="font-weight:600;">أو أدخل عدد الأيام:</label>
-            <input type="number" id="durationInput" min="1" max="2000" value="90" inputmode="numeric">
+          <input type="hidden" id="durationInput" value="90">
+          <div class="custom-duration-wrap" id="customDurationWrap">
+            <div class="custom-duration-grid">
+              <div>
+                <label for="durYears">سنوات</label>
+                <input type="number" id="durYears" min="0" max="20" value="0" inputmode="numeric">
+              </div>
+              <div>
+                <label for="durMonths">أشهر</label>
+                <input type="number" id="durMonths" min="0" max="240" value="0" inputmode="numeric">
+              </div>
+              <div>
+                <label for="durDays">أيام</label>
+                <input type="number" id="durDays" min="0" max="2000" value="0" inputmode="numeric">
+              </div>
+            </div>
+            <p class="hint" id="customDurationTotal">الإجمالي: 0 يوم</p>
           </div>
         </div>
 
@@ -652,16 +684,41 @@
   /* ---------- duration presets ---------- */
   var durationInput = $('durationInput');
   var presetBtns = Array.prototype.slice.call(document.querySelectorAll('.pill[data-duration]'));
+  var otherDurationBtn = $('otherDurationBtn');
+  var customDurationWrap = $('customDurationWrap');
+  var durYears = $('durYears'), durMonths = $('durMonths'), durDays = $('durDays');
+  var customDurationTotal = $('customDurationTotal');
 
   presetBtns.forEach(function(btn){
     btn.addEventListener('click', function(){
       presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      otherDurationBtn.setAttribute('aria-pressed','false');
       btn.setAttribute('aria-pressed','true');
       durationInput.value = btn.getAttribute('data-duration');
+      customDurationWrap.classList.remove('show');
     });
   });
-  durationInput.addEventListener('input', function(){
+
+  otherDurationBtn.addEventListener('click', function(){
     presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+    otherDurationBtn.setAttribute('aria-pressed','true');
+    customDurationWrap.classList.add('show');
+    durYears.value = 0;
+    durMonths.value = 0;
+    durDays.value = 0;
+    updateCustomDuration();
+  });
+
+  function updateCustomDuration(){
+    var y = parseInt(durYears.value, 10) || 0;
+    var m = parseInt(durMonths.value, 10) || 0;
+    var d = parseInt(durDays.value, 10) || 0;
+    var total = (y * 365) + (m * 30) + d;
+    durationInput.value = total;
+    customDurationTotal.textContent = 'الإجمالي: ' + total + ' يوم';
+  }
+  [durYears, durMonths, durDays].forEach(function(input){
+    input.addEventListener('input', updateCustomDuration);
   });
 
   /* ---------- default start date = today ---------- */
