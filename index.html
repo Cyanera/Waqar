@@ -460,16 +460,23 @@
     padding:12px 10px;
     text-align:center;
     position:sticky;top:0;
+    border-inline-start:1px solid rgba(255,255,255,.25);
   }
+  table.schedule thead th:first-child{border-inline-start:none;}
   table.schedule tbody td{
     padding:10px;
     text-align:center;
     border-bottom:1px solid var(--line);
+    border-inline-start:1px solid var(--line);
     font-variant-numeric:tabular-nums;
   }
+  table.schedule tbody td:first-child{border-inline-start:none;}
+  /* clearer separator right before the status column specifically */
+  table.schedule th:last-child, table.schedule td:last-child{border-inline-start:2px solid var(--ink);}
   table.schedule tbody tr:nth-child(even){background:var(--card-tint);}
   table.schedule tbody tr.is-today{background:var(--olive-soft);}
   table.schedule tbody tr.is-rest td{color:var(--slate);font-style:italic;}
+  table.schedule tbody tr.is-review td.amount-cell{color:var(--olive-deep);font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   table.schedule tbody tr.is-past .status-icon{color:var(--olive);}
   .status-icon{font-weight:900;}
   td.amount-cell{font-weight:700;}
@@ -518,6 +525,9 @@
     border-top:1px solid var(--line);
   }
   footer.site .heart{color:var(--olive);}
+  footer.site .social-links{display:flex;justify-content:center;gap:14px;margin-top:12px;}
+  footer.site .social-link{color:var(--olive-deep);display:inline-flex;transition:opacity .15s;}
+  footer.site .social-link:hover{opacity:.7;}
 
   /* ===== Print ===== */
   @media print{
@@ -527,6 +537,8 @@
     #printExport{width:auto; padding:0;}
     table.schedule thead th{background:#eee;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     table.schedule tbody tr.is-today{background:#f0e6c8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    table.schedule thead{display:table-header-group;}
+    table.schedule tbody tr{break-inside:avoid;page-break-inside:avoid;}
   }
 
   @media (max-width:520px){
@@ -638,7 +650,7 @@
           <label class="weekday-chip"><input type="checkbox" value="5" checked> الجمعة</label>
           <label class="weekday-chip"><input type="checkbox" value="6"> السبت</label>
         </div>
-        <p class="hint">هذه الأيام تُعتبر إجازة أسبوعية. بالإضافة لها، تتضمن الخطة تلقائياً: يوم مراجعة كل أسبوع، يوم مراجعة كل شهر، أسبوع مراجعة كل نصف سنة، وأسبوعين مراجعة كل سنة.</p>
+        <p class="hint">هذه الأيام تُعتبر إجازة من الحفظ. بالإضافة لها، تتضمن الخطة تلقائياً: يوم مراجعة في آخر كل أسبوع، يوم مراجعة في آخر كل شهر، أسبوع مراجعة كل نصف سنة، وأسبوعين مراجعة كل سنة.</p>
       </section>
 
       <section class="card plan-preview" id="planPreview">
@@ -727,9 +739,14 @@
 
   <footer class="site">
     <p>هذا العمل <span class="heart">صدقة جارية</span> عن أبي -تغمده الله بواسع رحمته-، وأمي -حفظها الله.</p>
-    <a class="social-link" href="https://x.com/i3ahad" target="_blank" rel="noopener" aria-label="حساب X">
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-7.6 8.7L23.3 22H16.7l-5.2-6.8L5.6 22H2.4l8.1-9.3L1.7 2h6.8l4.7 6.2L18.9 2Zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20Z"/></svg>
-    </a>
+    <div class="social-links">
+      <a class="social-link" href="https://github.com/Cyanera/Waqar" target="_blank" rel="noopener" aria-label="صفحة المشروع على GitHub">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.22-3.37-1.22-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.57 2.34 1.12 2.91.86.09-.66.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.72 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 2.5-.35c.85 0 1.71.12 2.5.35 1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.46.1 2.72.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+      </a>
+      <a class="social-link" href="mailto:cyanera38@gmail.com" aria-label="التواصل عبر البريد الإلكتروني">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M3 5.5h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Zm1.4 2 7.1 5.9a.8.8 0 0 0 1 0l7.1-5.9H4.4Zm-.4 1.3v8.7h18V8.8l-8.36 6.94a2 2 0 0 1-2.55 0L4 8.8Z"/></svg>
+      </a>
+    </div>
   </footer>
 
 </div>
@@ -1048,34 +1065,59 @@
     return set;
   }
 
-  /* Built-in review cadence (fixed calendar-day counting from the plan's start,
-     independent of weekly holidays): every 7th day is a weekly review day,
-     every 30th a monthly one, the last 7 days of every 180-day block are a
-     half-year review week, and the last 14 days of every 360-day block are
-     the annual review. Longer cadence always wins on overlap. */
+  /* Built-in review cadence. Weekly and monthly reviews land on real calendar
+     boundaries rather than a fixed day-count: weekly review is the last
+     non-holiday weekday of the Sun–Sat week (Saturday, falling back to Friday,
+     then Thursday, ... if those are excluded weekdays); monthly review is the
+     actual last calendar day of the month (falling back to the last
+     non-holiday day in that month). Semiannual (last 7 days of every 180-day
+     block) and annual (last 14 days of every 360-day block) stay on fixed
+     calendar-day counting from the plan's start. Holiday always wins over any
+     review classification, and longer cadence always wins on overlap
+     (annual > semiannual > monthly > weekly). */
   var REVIEW_LABELS = {
-    holiday:    'يوم إجازة أسبوعية',
+    holiday:    'يوم إجازة من الحفظ',
     annual:     'مراجعة سنوية (حفظ العام)',
     semiannual: 'مراجعة نصف سنوية',
     monthly:    'مراجعة شهرية (حفظ الشهر)',
     weekly:     'مراجعة أسبوعية'
   };
-  function classifyDay(dayIndex1Based, isHoliday){
+  function isSameDate(a, b){
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+  /* the excluded-weekday set is a fixed weekly pattern, so the weekly-review
+     weekday is constant for the whole plan: Saturday, else Friday, else
+     Thursday, ... the first non-holiday weekday going backward from Saturday */
+  function weeklyReviewWeekday(excludedWeekdaySet){
+    for (var wd = 6; wd >= 0; wd--){
+      if (!excludedWeekdaySet.has(wd)) return wd;
+    }
+    return 6;
+  }
+  function monthlyReviewDate(date, excludedWeekdaySet){
+    var d = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    while (excludedWeekdaySet.has(d.getDay())){
+      d.setDate(d.getDate() - 1);
+    }
+    return d;
+  }
+  function classifyDay(dayIndex1Based, date, isHoliday, excludedWeekdaySet, weeklyWd){
     if (isHoliday) return 'holiday';
     var i = dayIndex1Based;
     if (((i - 1) % 360) >= 346) return 'annual';
     if (((i - 1) % 180) >= 173) return 'semiannual';
-    if (i % 30 === 0) return 'monthly';
-    if (i % 7 === 0) return 'weekly';
+    if (isSameDate(date, monthlyReviewDate(date, excludedWeekdaySet))) return 'monthly';
+    if (date.getDay() === weeklyWd) return 'weekly';
     return 'new';
   }
 
   function buildCalendarDays(startDate, duration, excludedWeekdaySet){
     var days = [];
+    var weeklyWd = weeklyReviewWeekday(excludedWeekdaySet);
     for (var i = 0; i < duration; i++){
       var d = addDays(startDate, i);
       var isHoliday = excludedWeekdaySet.has(d.getDay());
-      var dayType = classifyDay(i + 1, isHoliday);
+      var dayType = classifyDay(i + 1, d, isHoliday, excludedWeekdaySet, weeklyWd);
       days.push({ date: d, dayType: dayType });
     }
     return days;
@@ -1249,11 +1291,14 @@
       if (isPast) tr.classList.add('is-past');
 
       var amountText;
-      if (cd.dayType !== 'new'){
+      if (cd.dayType === 'holiday'){
         tr.classList.add('is-rest');
+        amountText = REVIEW_LABELS.holiday;
+      } else if (cd.dayType !== 'new'){
+        tr.classList.add('is-review');
         amountText = REVIEW_LABELS[cd.dayType];
       } else if (!cd.amount){
-        tr.classList.add('is-rest');
+        tr.classList.add('is-review');
         amountText = 'يوم مراجعة';
       } else {
         amountText = formatUnitRange(sched.level.key, cd.rangeStart, cd.rangeEnd);
@@ -1281,26 +1326,30 @@
   }
 
   /* html2canvas silently produces a blank canvas past a certain pixel height
-     (browser canvas size limits), which broke PDF export for long plans (700+
-     rows). Capture the table in bounded-height row chunks instead, one canvas
-     (and one fresh PDF page) per chunk. */
-  var PDF_ROWS_PER_CHUNK = 600;
+     (browser canvas size limits, ~65536 physical px observed empirically) —
+     stay well under that per capture. At scale 2 that's ~32000 CSS px, so we
+     batch several printed pages' worth of rows (each with its own repeated
+     <thead>) into a single capture, then crop that one canvas into per-page
+     slices client-side (fast) instead of paying html2canvas's per-call
+     overhead once per printed page. */
+  var CANVAS_SCALE = 2;
+  var BATCH_PAGES = 15;
 
-  function addCanvasToPdf(pdf, canvas, pageWidth, pageHeight, startNewPage){
+  function addCanvasAsPage(pdf, canvas, pageWidth, pageHeight, startNewPage){
     var imgWidth = pageWidth;
     var imgHeight = (canvas.height * imgWidth) / canvas.width;
     var imgData = canvas.toDataURL('image/jpeg', 0.92);
-    var heightLeft = imgHeight;
-    var position = 0;
     if (startNewPage) pdf.addPage();
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-    while (heightLeft > 0){
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
+    pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+  }
+
+  /* crops a horizontal strip [sy, sy+sh) (in source-canvas pixels) into its own canvas */
+  function cropCanvas(src, sy, sh){
+    var out = document.createElement('canvas');
+    out.width = src.width;
+    out.height = sh;
+    out.getContext('2d').drawImage(src, 0, sy, src.width, sh, 0, 0, src.width, sh);
+    return out;
   }
 
   $('pdfBtn').addEventListener('click', function(){
@@ -1311,10 +1360,14 @@
     status.textContent = 'جاري تجهيز ملف PDF...';
 
     var clipEl = document.querySelector('.print-export-clip');
+    /* html2canvas re-processes every stylesheet while cloning the document;
+       the Google Fonts <link> alone adds ~13s per capture even though the
+       fonts are already resolved by the time we get here (document.fonts.ready
+       already awaited) — pull it out for the duration of the export. */
+    var fontLinks = Array.prototype.slice.call(document.querySelectorAll('link[href*="fonts.googleapis"]'));
+    var fontLinkSpots = fontLinks.map(function(l){ return { parent: l.parentNode, next: l.nextSibling }; });
 
     (async function(){
-      /* briefly make the export node genuinely paint (off-screen, not zero-size-clipped)
-         so html2canvas never races a browser that skipped painting invisible content */
       clipEl.style.position = 'fixed';
       clipEl.style.left = '-9999px';
       clipEl.style.top = '0';
@@ -1324,18 +1377,13 @@
 
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       await nextFrame();
+      fontLinks.forEach(function(l){ l.remove(); });
 
       var scheduleTable = document.querySelector('#printExport table.schedule');
       var theadHtml = scheduleTable.querySelector('thead').outerHTML;
       var allRows = Array.prototype.slice.call(scheduleTable.querySelectorAll('tbody tr'));
-      var headerHtml = document.querySelector('#printExport .print-title').outerHTML +
-        document.querySelector('#printExport .print-summary').outerHTML;
-
-      var chunks = [];
-      for (var i = 0; i < allRows.length; i += PDF_ROWS_PER_CHUNK){
-        chunks.push(allRows.slice(i, i + PDF_ROWS_PER_CHUNK));
-      }
-      if (chunks.length === 0) chunks.push([]);
+      var titleHtml = document.querySelector('#printExport .print-title').outerHTML;
+      var summaryHtml = document.querySelector('#printExport .print-summary').outerHTML;
 
       var staging = document.createElement('div');
       staging.className = 'print-export';
@@ -1344,16 +1392,61 @@
       var pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
       var pageWidth = pdf.internal.pageSize.getWidth();
       var pageHeight = pdf.internal.pageSize.getHeight();
+      var cssPerPt = 760 / pageWidth;
+      var pageHeightCss = pageHeight * cssPerPt;
 
-      for (var c = 0; c < chunks.length; c++){
-        if (chunks.length > 1){
-          status.textContent = 'جاري تجهيز ملف PDF... (' + (c + 1) + '/' + chunks.length + ')';
+      /* measure real rendered heights (CSS px) to fit an exact row count per page */
+      staging.innerHTML = titleHtml + summaryHtml;
+      await nextFrame();
+      var titleBlockH = staging.getBoundingClientRect().height;
+      staging.innerHTML = '<table class="schedule">' + theadHtml +
+        '<tbody><tr><td>1</td><td>1</td><td>1</td><td>1</td></tr></tbody></table>';
+      await nextFrame();
+      var theadH = staging.querySelector('thead').getBoundingClientRect().height;
+      var rowH = staging.querySelector('tbody tr').getBoundingClientRect().height;
+      var SAFETY = 0.96;
+      var rowsFirstPage = Math.max(1, Math.floor(((pageHeightCss - titleBlockH - theadH) * SAFETY) / rowH));
+      var rowsLaterPage = Math.max(1, Math.floor(((pageHeightCss - theadH) * SAFETY) / rowH));
+
+      var groups = [];
+      var idx = 0;
+      groups.push(allRows.slice(idx, idx + rowsFirstPage)); idx += rowsFirstPage;
+      while (idx < allRows.length){
+        groups.push(allRows.slice(idx, idx + rowsLaterPage));
+        idx += rowsLaterPage;
+      }
+
+      var pagesDone = 0;
+      for (var b = 0; b < groups.length; b += BATCH_PAGES){
+        var batch = groups.slice(b, b + BATCH_PAGES);
+        if (groups.length > 1){
+          status.textContent = 'جاري تجهيز ملف PDF... (صفحة ' + (pagesDone + 1) + ' من ' + groups.length + ')';
         }
-        var rowsHtml = chunks[c].map(function(tr){ return tr.outerHTML; }).join('');
-        staging.innerHTML = (c === 0 ? headerHtml : '') + '<table class="schedule">' + theadHtml + '<tbody>' + rowsHtml + '</tbody></table>';
+
+        var html = (b === 0) ? (titleHtml + summaryHtml) : '';
+        for (var bi = 0; bi < batch.length; bi++){
+          var rowsHtml = batch[bi].map(function(tr){ return tr.outerHTML; }).join('');
+          html += '<table class="schedule">' + theadHtml + '<tbody>' + rowsHtml + '</tbody></table>';
+        }
+        staging.innerHTML = html;
         await nextFrame();
-        var canvas = await window.html2canvas(staging, { scale: 2, backgroundColor: '#ffffff' });
-        addCanvasToPdf(pdf, canvas, pageWidth, pageHeight, c > 0);
+
+        var stagingTop = staging.getBoundingClientRect().top;
+        var totalCssHeight = staging.getBoundingClientRect().height;
+        var tables = Array.prototype.slice.call(staging.querySelectorAll('table.schedule'));
+        var tableTops = tables.map(function(t){ return t.getBoundingClientRect().top - stagingTop; });
+
+        var batchCanvas = await window.html2canvas(staging, { scale: CANVAS_SCALE, backgroundColor: '#ffffff' });
+
+        for (var bi2 = 0; bi2 < batch.length; bi2++){
+          var startCss = tableTops[bi2];
+          var endCss = (bi2 + 1 < tableTops.length) ? tableTops[bi2 + 1] : totalCssHeight;
+          var sy = Math.round(startCss * CANVAS_SCALE);
+          var sh = Math.round((endCss - startCss) * CANVAS_SCALE);
+          var pageCanvas = cropCanvas(batchCanvas, sy, sh);
+          addCanvasAsPage(pdf, pageCanvas, pageWidth, pageHeight, pagesDone > 0);
+          pagesDone++;
+        }
       }
 
       clipEl.removeChild(staging);
@@ -1362,6 +1455,9 @@
     })().catch(function(){
       status.textContent = 'تعذّر إنشاء PDF، جرّب زر الطباعة بدلاً منه.';
     }).finally(function(){
+      fontLinkSpots.forEach(function(spot, i){
+        spot.parent.insertBefore(fontLinks[i], spot.next);
+      });
       clipEl.style.position = '';
       clipEl.style.left = '';
       clipEl.style.top = '';
