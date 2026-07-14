@@ -822,6 +822,16 @@
       amounts.push(cum - prevCum);
       prevCum = cum;
     }
+    /* the very first day of the plan should never land on a zero (review) day */
+    if (amounts.length > 0 && amounts[0] === 0){
+      for (var j = 1; j < amounts.length; j++){
+        if (amounts[j] > 0){
+          amounts[j] -= 1;
+          amounts[0] = 1;
+          break;
+        }
+      }
+    }
     return amounts;
   }
 
