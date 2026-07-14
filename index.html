@@ -732,6 +732,7 @@
 
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="vendor/html2canvas.min.js"></script>
+<script src="vendor/quran-page-ayah.js"></script>
 <script>
 (function(){
   "use strict";
@@ -754,8 +755,8 @@
     { key: 'juz',      total: 30,   label: 'بالأجزاء' },
     { key: 'hizb',     total: 60,   label: 'بالأحزاب' },
     { key: 'quarter',  total: 240,  label: 'بأرباع الحزب' },
-    { key: 'page',     total: TOTAL_PAGES, label: 'بالصفحات' },
-    { key: 'halfpage', total: TOTAL_PAGES * 2, label: 'بأنصاف الصفحات' }
+    { key: 'page',     total: TOTAL_PAGES, label: 'بمقدار صفحة تقريباً (بالآيات)' },
+    { key: 'halfpage', total: TOTAL_PAGES * 2, label: 'بمقدار نصف صفحة تقريباً (بالآيات)' }
   ];
   var STORAGE_KEY = 'waqar_tracker_v1';
 
@@ -964,15 +965,23 @@
       return 'من الربع ' + qpa + ' (الجزء ' + qja + ') إلى الربع ' + qpb + ' (الجزء ' + qjb + ')';
     }
     if (levelKey === 'page'){
-      return a === b ? ('صفحة ' + a) : ('من صفحة ' + a + ' إلى صفحة ' + b);
+      return ayahRangeLabel(PAGE_START[a - 1], PAGE_END[b - 1]);
     }
-    /* halfpage */
-    var pa = Math.ceil(a / 2), pb = Math.ceil(b / 2);
-    var hfa = (a % 2 === 1) ? 1 : 2, hfb = (b % 2 === 1) ? 1 : 2;
-    if (a === b) return 'نصف الصفحة ' + pa + ' (' + (hfa === 1 ? 'الأول' : 'الثاني') + ')';
-    if ((b - a + 1) === 2 && hfa === 1 && hfb === 2 && pa === pb) return 'صفحة ' + pa;
-    if (hfa === 1 && hfb === 2) return 'من صفحة ' + pa + ' إلى صفحة ' + pb;
-    return 'من نصف الصفحة ' + pa + ' إلى نصف الصفحة ' + pb;
+    /* halfpage: split each page at its middle ayah instead of an arbitrary half */
+    var startRef = (a % 2 === 1) ? PAGE_START[Math.ceil(a / 2) - 1] : PAGE_MID[Math.ceil(a / 2) - 1];
+    var endRef = (b % 2 === 1) ? PAGE_BEFORE_MID[Math.ceil(b / 2) - 1] : PAGE_END[Math.ceil(b / 2) - 1];
+    return ayahRangeLabel(startRef, endRef);
+  }
+
+  function ayahLabel(ref){
+    return 'الآية ' + ref[1] + ' من سورة ' + ref[0];
+  }
+  function ayahRangeLabel(startRef, endRef){
+    if (startRef[0] === endRef[0] && startRef[1] === endRef[1]) return ayahLabel(startRef);
+    if (startRef[0] === endRef[0]){
+      return 'من الآية ' + startRef[1] + ' إلى الآية ' + endRef[1] + ' من سورة ' + startRef[0];
+    }
+    return 'من الآية ' + startRef[1] + ' من سورة ' + startRef[0] + ' إلى الآية ' + endRef[1] + ' من سورة ' + endRef[0];
   }
 
   /* even spread distribution (Bresenham-style) across n slots summing to `remaining` */
