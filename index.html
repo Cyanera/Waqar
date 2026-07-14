@@ -377,7 +377,7 @@
     gap:8px;
     margin:6px 0 24px;
   }
-  .crescent-svg{width:150px;height:150px;filter:drop-shadow(0 6px 16px rgba(58,85,72,.2));}
+  .crescent-svg{width:170px;height:153px;filter:drop-shadow(0 6px 16px rgba(58,85,72,.2));}
   #fillRect{transition: y var(--dur) var(--ease), height var(--dur) var(--ease);}
   .crescent-pct{
     font-family:"Thmanyah Serif Display","Cairo",sans-serif;
@@ -388,11 +388,28 @@
   }
   .crescent-label{color:var(--slate);font-size:.85rem;font-weight:600;}
 
-  .table-wrap{
-    overflow-x:auto;
-    border-radius:var(--radius-md);
-    border:1px solid var(--line);
+  /* the export content is fully rendered but clipped to nothing on screen,
+     so it never affects page scroll/layout; only shown to print / captured for PDF */
+  .print-export-clip{
+    position:fixed;
+    top:0; left:0;
+    width:0; height:0;
+    overflow:hidden;
   }
+  .print-export{
+    width:760px;
+    background:#fff;
+    padding:24px;
+  }
+  .print-title{
+    font-family:"Thmanyah Serif Display","Cairo",sans-serif;
+    font-weight:900;
+    font-size:1.8rem;
+    color:#1B2430;
+    margin:0 0 10px;
+  }
+  .print-summary{color:#444;font-weight:600;margin:0 0 18px;}
+
   table.schedule{
     width:100%;
     border-collapse:collapse;
@@ -467,10 +484,10 @@
 
   /* ===== Print ===== */
   @media print{
-    body{background:#fff !important;color:#000;}
-    header.site, #waqarForm, .banner, .card:not(#resultsCard), .results-actions, .hint-print-only-hide{display:none !important;}
-    #results{display:block !important;}
-    .card{box-shadow:none;color:#000;background:#fff;border:none;}
+    body *{visibility:hidden;}
+    #printExport, #printExport *{visibility:visible;}
+    .print-export-clip{position:static; width:auto; height:auto; overflow:visible;}
+    #printExport{width:auto; padding:0;}
     table.schedule thead th{background:#eee;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     table.schedule tbody tr.is-today{background:#f0e6c8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
@@ -595,48 +612,59 @@
 
         <p class="summary-line" id="summaryLine"></p>
         <p class="summary-sub" id="summarySub"></p>
-
-        <div class="table-wrap">
-          <table class="schedule">
-            <thead>
-              <tr>
-                <th scope="col">اليوم</th>
-                <th scope="col">التاريخ</th>
-                <th scope="col">المقدار المطلوب</th>
-                <th scope="col">الحالة</th>
-              </tr>
-            </thead>
-            <tbody id="scheduleBody"></tbody>
-          </table>
-        </div>
+        <p class="hint" style="text-align:center;">الجدول اليومي التفصيلي جاهز — حمّله PDF أو اطبعه لتشوفه كامل.</p>
 
         <div class="results-actions">
           <button type="button" class="btn-primary slim" id="trackerBtn">متتبع الختمة</button>
-          <button type="button" class="btn-secondary" id="printBtn">طباعة</button>
           <button type="button" class="btn-secondary" id="pdfBtn">تحميل PDF</button>
+          <button type="button" class="btn-secondary" id="printBtn">طباعة</button>
         </div>
-        <p class="hint hint-print-only-hide" style="text-align:center;">لتحميل PDF: من نافذة الطباعة اختر «حفظ كـ PDF» كوجهة.</p>
+        <p class="hint" id="pdfStatus" aria-live="polite" style="text-align:center;"></p>
       </div>
     </section>
+
+    <!-- rendered but visually clipped to nothing; source for print and PDF export -->
+    <div class="print-export-clip">
+    <div id="printExport" class="print-export">
+      <h1 class="print-title">وقار — جدول ختمة القرآن</h1>
+      <p class="print-summary" id="printSummary"></p>
+      <table class="schedule">
+        <thead>
+          <tr>
+            <th scope="col">اليوم</th>
+            <th scope="col">التاريخ</th>
+            <th scope="col">المقدار المطلوب</th>
+            <th scope="col">الحالة</th>
+          </tr>
+        </thead>
+        <tbody id="scheduleBody"></tbody>
+      </table>
+    </div>
+    </div>
 
     <section class="card" id="trackerCard" style="display:none;">
       <h2 style="justify-content:center;"><span class="num" aria-hidden="true">◈</span> متتبع الختمة</h2>
 
       <div class="crescent-wrap">
-        <svg class="crescent-svg" viewBox="0 0 200 200" aria-hidden="true">
+        <svg class="crescent-svg" viewBox="0 0 200 180" aria-hidden="true">
           <defs>
-            <clipPath id="crescentClip">
-              <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z"/>
+            <clipPath id="crownClip">
+              <path d="M24,160 L24,120 L56,60 L80,104 L100,36 L120,104 L144,60 L176,120 L176,160 Z"/>
+              <rect x="24" y="144" width="152" height="20" rx="4"/>
             </clipPath>
             <linearGradient id="oliveGrad" x1="0" y1="1" x2="0" y2="0">
               <stop offset="0%" stop-color="#4A6D5C"/>
               <stop offset="100%" stop-color="#9CC0AE"/>
             </linearGradient>
           </defs>
-          <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z" fill="#EEF4F0" stroke="#4A6D5C" stroke-width="2.5"/>
-          <g clip-path="url(#crescentClip)">
-            <rect id="fillRect" x="20" y="200" width="150" height="0" fill="url(#oliveGrad)"/>
+          <path d="M24,160 L24,120 L56,60 L80,104 L100,36 L120,104 L144,60 L176,120 L176,160 Z" fill="#EEF4F0" stroke="#4A6D5C" stroke-width="2.5" stroke-linejoin="round"/>
+          <rect x="24" y="144" width="152" height="20" rx="4" fill="#EEF4F0" stroke="#4A6D5C" stroke-width="2.5"/>
+          <g clip-path="url(#crownClip)">
+            <rect id="fillRect" x="24" y="164" width="152" height="0" fill="url(#oliveGrad)"/>
           </g>
+          <circle cx="56" cy="60" r="7" fill="#C9A05C"/>
+          <circle cx="100" cy="36" r="8" fill="#C9A05C"/>
+          <circle cx="144" cy="60" r="7" fill="#C9A05C"/>
         </svg>
         <div class="crescent-pct" id="pctText">0٪</div>
         <div class="crescent-label" id="crescentLabel">0 من 30 جزءاً مكتملة</div>
@@ -657,6 +685,8 @@
 
 </div>
 
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/html2canvas.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -931,9 +961,12 @@
 
   /* ---------- rendering the schedule table ---------- */
   function renderResults(sched){
-    $('summaryLine').textContent = 'من ' + fmtDate(sched.startDate) + ' إلى ' + fmtDate(sched.endDate);
-    $('summarySub').textContent = 'المدة: ' + sched.calendarDays.length + ' يوماً (منها ' +
+    var line = 'من ' + fmtDate(sched.startDate) + ' إلى ' + fmtDate(sched.endDate);
+    var sub = 'المدة: ' + sched.calendarDays.length + ' يوماً (منها ' +
       sched.readingDaysCount + ' يوم قراءة فعلي) — تقسيم المقدار اليومي: ' + sched.level.label;
+    $('summaryLine').textContent = line;
+    $('summarySub').textContent = sub;
+    $('printSummary').textContent = line + ' — ' + sub;
 
     var today = startOfDay(new Date());
     var tbody = $('scheduleBody');
@@ -973,7 +1006,40 @@
 
   /* ---------- print / PDF ---------- */
   $('printBtn').addEventListener('click', function(){ window.print(); });
-  $('pdfBtn').addEventListener('click', function(){ window.print(); });
+
+  $('pdfBtn').addEventListener('click', function(){
+    var btn = $('pdfBtn');
+    var status = $('pdfStatus');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    status.textContent = 'جاري تجهيز ملف PDF...';
+
+    window.html2canvas($('printExport'), { scale: 2, backgroundColor: '#ffffff' }).then(function(canvas){
+      var pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+      var pageWidth = pdf.internal.pageSize.getWidth();
+      var pageHeight = pdf.internal.pageSize.getHeight();
+      var imgWidth = pageWidth;
+      var imgHeight = (canvas.height * imgWidth) / canvas.width;
+      var imgData = canvas.toDataURL('image/jpeg', 0.92);
+      var heightLeft = imgHeight;
+      var position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0){
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      pdf.save('waqar-khatma-schedule.pdf');
+      status.textContent = '';
+    }).catch(function(){
+      status.textContent = 'تعذّر إنشاء PDF، جرّب زر الطباعة بدلاً منه.';
+    }).finally(function(){
+      btn.disabled = false;
+    });
+  });
 
   /* ---------- view switching ---------- */
   function switchView(view){
@@ -1029,7 +1095,7 @@
     var checked = currentTrackerData.tasks.filter(function(t){ return t.checked; }).length;
     var pct = Math.round(checked / JUZ_COUNT * 100);
     var fillRect = $('fillRect');
-    var maxH = 164, baseY = 182;
+    var maxH = 128, baseY = 164;
     var h = (pct / 100) * maxH;
     fillRect.setAttribute('y', baseY - h);
     fillRect.setAttribute('height', h);
