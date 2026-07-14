@@ -1025,6 +1025,10 @@
   /* ---------- print / PDF ---------- */
   $('printBtn').addEventListener('click', function(){ window.print(); });
 
+  function nextFrame(){
+    return new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
+  }
+
   $('pdfBtn').addEventListener('click', function(){
     var btn = $('pdfBtn');
     var status = $('pdfStatus');
@@ -1032,7 +1036,23 @@
     btn.disabled = true;
     status.textContent = 'جاري تجهيز ملف PDF...';
 
-    window.html2canvas($('printExport'), { scale: 2, backgroundColor: '#ffffff' }).then(function(canvas){
+    var clipEl = document.querySelector('.print-export-clip');
+
+    (async function(){
+      /* briefly make the export node genuinely paint (off-screen, not zero-size-clipped)
+         so html2canvas never races a browser that skipped painting invisible content */
+      clipEl.style.position = 'fixed';
+      clipEl.style.left = '-9999px';
+      clipEl.style.top = '0';
+      clipEl.style.width = 'auto';
+      clipEl.style.height = 'auto';
+      clipEl.style.overflow = 'visible';
+
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      await nextFrame();
+
+      var canvas = await window.html2canvas($('printExport'), { scale: 2, backgroundColor: '#ffffff' });
+
       var pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
       var pageWidth = pdf.internal.pageSize.getWidth();
       var pageHeight = pdf.internal.pageSize.getHeight();
@@ -1052,9 +1072,15 @@
       }
       pdf.save('waqar-khatma-schedule.pdf');
       status.textContent = '';
-    }).catch(function(){
+    })().catch(function(){
       status.textContent = 'تعذّر إنشاء PDF، جرّب زر الطباعة بدلاً منه.';
     }).finally(function(){
+      clipEl.style.position = '';
+      clipEl.style.left = '';
+      clipEl.style.top = '';
+      clipEl.style.width = '';
+      clipEl.style.height = '';
+      clipEl.style.overflow = '';
       btn.disabled = false;
     });
   });
