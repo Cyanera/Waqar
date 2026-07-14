@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>وقار — مولّد جدول ختمة القرآن</title>
+<meta name="description" content="وقار: أداة مجانية بالكامل لإنشاء جدول ختمة قرآن مخصص حسب مدتك ونقطة بدايتك، يعمل بالكامل في متصفحك دون أي تخزين لبياناتك.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%231B2430'/%3E%3Cpath d='M62 18a34 34 0 1 0 0 64 40 40 0 1 1 0-64Z' fill='%23C9A05C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2430;
+    --ink-2:#141b25;
+    --cream:#F5EFE3;
+    --cream-dim:#e9e1cf;
+    --gold:#C9A05C;
+    --gold-bright:#e0b96f;
+    --slate:#7A8B99;
+    --olive:#4A6D5C;
+    --olive-bright:#5f8873;
+    --danger:#b5654f;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --shadow-card: 0 18px 45px -18px rgba(0,0,0,.55);
+    --dur:.35s;
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}
+  }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"IBM Plex Sans Arabic","Cairo",sans-serif;
+    color:var(--cream);
+    background:
+      radial-gradient(1.5px 1.5px at 8% 12%, rgba(245,239,227,.55) 0, transparent 60%),
+      radial-gradient(1.5px 1.5px at 22% 28%, rgba(245,239,227,.4) 0, transparent 60%),
+      radial-gradient(1px 1px at 38% 8%, rgba(245,239,227,.5) 0, transparent 60%),
+      radial-gradient(1.5px 1.5px at 55% 22%, rgba(245,239,227,.35) 0, transparent 60%),
+      radial-gradient(1px 1px at 68% 6%, rgba(245,239,227,.45) 0, transparent 60%),
+      radial-gradient(1.5px 1.5px at 82% 18%, rgba(245,239,227,.4) 0, transparent 60%),
+      radial-gradient(1px 1px at 92% 32%, rgba(245,239,227,.35) 0, transparent 60%),
+      radial-gradient(1.5px 1.5px at 14% 45%, rgba(245,239,227,.3) 0, transparent 60%),
+      radial-gradient(1px 1px at 46% 38%, rgba(245,239,227,.3) 0, transparent 60%),
+      radial-gradient(1.5px 1.5px at 78% 48%, rgba(245,239,227,.28) 0, transparent 60%),
+      linear-gradient(180deg, #10161f 0%, var(--ink) 38%, #232f3d 78%, #3a3220 130%);
+    background-attachment:fixed;
+    background-repeat:no-repeat;
+    background-size:cover;
+    line-height:1.6;
+  }
+
+  .wrap{max-width:900px;margin:0 auto;padding:28px 18px 60px;}
+
+  /* ===== Header ===== */
+  header.site{
+    text-align:center;
+    padding:34px 10px 18px;
+  }
+  .brand-mark{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:64px;height:64px;
+    margin-bottom:10px;
+  }
+  .brand-mark svg{width:100%;height:100%;}
+  h1.brand{
+    font-family:"Cairo",sans-serif;
+    font-weight:900;
+    font-size:clamp(2.2rem,6vw,3rem);
+    margin:0;
+    letter-spacing:.5px;
+    color:var(--cream);
+    text-shadow:0 2px 24px rgba(201,160,92,.25);
+  }
+  p.tagline{
+    color:var(--gold-bright);
+    font-weight:600;
+    font-size:1.05rem;
+    margin:8px auto 4px;
+    max-width:32em;
+  }
+  p.hadith{
+    color:var(--slate);
+    font-size:.88rem;
+    max-width:34em;
+    margin:6px auto 0;
+    line-height:1.9;
+  }
+
+  /* ===== Cards ===== */
+  .card{
+    background:var(--cream);
+    color:var(--ink);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+    padding:26px 22px;
+    margin-top:22px;
+  }
+  .card h2{
+    font-family:"Cairo",sans-serif;
+    font-weight:800;
+    font-size:1.3rem;
+    margin:0 0 18px;
+    color:var(--ink);
+    display:flex;align-items:center;gap:10px;
+  }
+  .card h2 .num{
+    background:var(--ink);
+    color:var(--gold-bright);
+    width:30px;height:30px;
+    border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:.95rem;
+    flex:none;
+  }
+
+  fieldset{border:none;margin:0;padding:0;}
+  legend{
+    font-weight:700;
+    font-size:.95rem;
+    margin-bottom:10px;
+    color:var(--ink);
+  }
+  .field-group{margin-bottom:22px;}
+  .hint{
+    color:var(--slate);
+    font-size:.8rem;
+    margin-top:6px;
+  }
+
+  /* pill button groups (duration presets / unit toggle / start point) */
+  .pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .pill{
+    appearance:none;
+    border:2px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    font-family:inherit;
+    font-weight:600;
+    font-size:.92rem;
+    padding:9px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background var(--dur) var(--ease), color var(--dur) var(--ease), transform .15s var(--ease);
+  }
+  .pill:hover{transform:translateY(-1px);}
+  .pill[aria-pressed="true"], .pill[aria-checked="true"]{
+    background:var(--ink);
+    color:var(--gold-bright);
+    border-color:var(--ink);
+  }
+  .pill:focus-visible, button:focus-visible, input:focus-visible, a:focus-visible{
+    outline:3px solid var(--gold);
+    outline-offset:3px;
+  }
+
+  .num-input-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+  }
+  input[type="number"], input[type="date"]{
+    font-family:"Cairo",sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size:1.05rem;
+    font-weight:600;
+    padding:11px 14px;
+    border-radius:var(--radius-sm);
+    border:2px solid #d9cfb8;
+    background:#fff;
+    color:var(--ink);
+    width:100%;
+    max-width:220px;
+  }
+  input[type="date"]{max-width:260px;}
+  input:focus{border-color:var(--gold);}
+
+  .toggle-switch-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .switch{
+    position:relative;
+    width:50px;height:28px;
+    background:#d9cfb8;
+    border-radius:999px;
+    transition:background var(--dur) var(--ease);
+    flex:none;
+  }
+  .switch::after{
+    content:"";
+    position:absolute;
+    top:3px; right:3px;
+    width:22px;height:22px;
+    background:#fff;
+    border-radius:50%;
+    transition:transform var(--dur) var(--ease);
+    box-shadow:0 2px 6px rgba(0,0,0,.25);
+  }
+  input.switch-input{position:absolute;opacity:0;width:1px;height:1px;}
+  input.switch-input:checked + .switch{background:var(--olive);}
+  input.switch-input:checked + .switch::after{transform:translateX(-22px);}
+  input.switch-input:focus-visible + .switch{outline:3px solid var(--gold);outline-offset:3px;}
+
+  .weekday-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+    gap:8px;
+    margin-top:14px;
+  }
+  .weekday-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:#fff;
+    border:2px solid #d9cfb8;
+    border-radius:var(--radius-sm);
+    padding:8px 10px;
+    font-size:.85rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .weekday-chip input{margin:0;accent-color:var(--olive);width:16px;height:16px;}
+
+  .radio-row{display:flex;flex-direction:column;gap:10px;}
+  .radio-opt{display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;}
+  .radio-opt input{width:18px;height:18px;accent-color:var(--ink);}
+
+  #customStartWrap{margin-top:12px;display:none;}
+  #customStartWrap.show{display:block;}
+
+  .error-msg{
+    background:#fbe9e4;
+    color:var(--danger);
+    border:1px solid #e3b3a4;
+    border-radius:var(--radius-sm);
+    padding:10px 14px;
+    font-size:.9rem;
+    font-weight:600;
+    margin-top:14px;
+    display:none;
+  }
+  .error-msg.show{display:block;}
+
+  .btn-primary{
+    display:block;
+    width:100%;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:var(--ink);
+    font-family:"Cairo",sans-serif;
+    font-weight:800;
+    font-size:1.1rem;
+    border:none;
+    border-radius:var(--radius-md);
+    padding:15px 20px;
+    cursor:pointer;
+    margin-top:8px;
+    box-shadow:0 10px 24px -10px rgba(201,160,92,.6);
+    transition:transform .15s var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -10px rgba(201,160,92,.75);}
+  .btn-primary:active{transform:translateY(0);}
+
+  .btn-secondary{
+    background:transparent;
+    border:2px solid var(--ink);
+    color:var(--ink);
+    font-family:"Cairo",sans-serif;
+    font-weight:700;
+    font-size:.95rem;
+    padding:10px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .btn-secondary:hover{background:var(--ink);color:var(--gold-bright);}
+
+  /* ===== Results ===== */
+  #results{display:none;}
+  #results.show{display:block;}
+
+  .summary-line{
+    text-align:center;
+    color:var(--ink);
+    font-weight:700;
+    font-size:1.05rem;
+    margin-bottom:6px;
+  }
+  .summary-sub{
+    text-align:center;
+    color:var(--slate);
+    font-size:.88rem;
+    margin-bottom:20px;
+  }
+
+  /* crescent progress */
+  .crescent-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    margin:6px 0 26px;
+  }
+  .crescent-svg{width:160px;height:160px;filter:drop-shadow(0 8px 20px rgba(201,160,92,.35));}
+  #fillRect{transition: y var(--dur) var(--ease), height var(--dur) var(--ease);}
+  .crescent-pct{
+    font-family:"Cairo",sans-serif;
+    font-weight:900;
+    font-size:1.6rem;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .crescent-label{color:var(--slate);font-size:.85rem;font-weight:600;}
+
+  .table-wrap{
+    overflow-x:auto;
+    border-radius:var(--radius-md);
+    border:1px solid #e2d8c2;
+  }
+  table.schedule{
+    width:100%;
+    border-collapse:collapse;
+    font-size:.92rem;
+    min-width:480px;
+  }
+  table.schedule thead th{
+    background:var(--ink);
+    color:var(--gold-bright);
+    font-weight:700;
+    padding:12px 10px;
+    text-align:center;
+    position:sticky;top:0;
+  }
+  table.schedule tbody td{
+    padding:10px;
+    text-align:center;
+    border-bottom:1px solid #ece4d2;
+    font-variant-numeric:tabular-nums;
+  }
+  table.schedule tbody tr:nth-child(even){background:#faf6ec;}
+  table.schedule tbody tr.is-today{background:#e9dcb8;}
+  table.schedule tbody tr.is-rest td{color:var(--slate);font-style:italic;}
+  table.schedule tbody tr.is-past .status-icon{color:var(--olive);}
+  .status-icon{font-weight:900;}
+  td.amount-cell{font-weight:700;}
+
+  .results-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-top:22px;
+  }
+
+  footer.site{
+    text-align:center;
+    color:var(--slate);
+    font-size:.85rem;
+    margin-top:40px;
+    padding-top:20px;
+    border-top:1px solid rgba(122,139,153,.25);
+  }
+  footer.site .heart{color:var(--gold);}
+
+  /* ===== Print ===== */
+  @media print{
+    body{background:#fff !important;color:#000;}
+    header.site, #waqarForm, .card:not(#resultsCard), .results-actions, .crescent-wrap{display:none !important;}
+    #results{display:block !important;}
+    .card{box-shadow:none;color:#000;background:#fff;}
+    table.schedule thead th{background:#eee;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    table.schedule tbody tr.is-today{background:#f0e6c8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+
+  @media (max-width:520px){
+    .card{padding:20px 16px;}
+    .pill{font-size:.85rem;padding:8px 13px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="site">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 100 100">
+        <path d="M62 12a38 38 0 1 0 0 76 45 45 0 1 1 0-76Z" fill="#C9A05C"/>
+        <path d="M76 24l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#F5EFE3"/>
+      </svg>
+    </div>
+    <h1 class="brand">وقار</h1>
+    <p class="tagline">لأن ختمة القرآن تُلبس والديك تاجاً يوم القيامة</p>
+    <p class="hadith">
+      «مَن قرأ القرآن وعمل بما فيه أُلبس والداه تاجاً يوم القيامة ضياؤه أحسن من ضياء الشمس»
+      — رواه أبو داود والترمذي
+    </p>
+  </header>
+
+  <main>
+    <form id="waqarForm" novalidate>
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">١</span> مدة الختمة</h2>
+        <div class="field-group">
+          <div class="pill-row" role="group" aria-label="مدد مقترحة">
+            <button type="button" class="pill" data-duration="30" aria-pressed="false">٣٠ يوماً</button>
+            <button type="button" class="pill" data-duration="60" aria-pressed="false">٦٠ يوماً</button>
+            <button type="button" class="pill" data-duration="30" data-ramadan="1" aria-pressed="false">رمضان</button>
+          </div>
+          <div class="num-input-wrap">
+            <label for="durationInput" style="font-weight:600;">أو أدخل عدد الأيام:</label>
+            <input type="number" id="durationInput" min="1" max="1000" value="30" inputmode="numeric">
+          </div>
+          <p class="hint" id="ramadanHint" style="display:none;">رمضان قد يكون ٢٩ أو ٣٠ يوماً — عدّل الرقم إذا لزم.</p>
+        </div>
+
+        <div class="field-group">
+          <label for="startDate" style="font-weight:700;display:block;margin-bottom:8px;">تاريخ البداية</label>
+          <input type="date" id="startDate" required>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">٢</span> وحدة التقسيم</h2>
+        <div class="pill-row" role="radiogroup" aria-label="وحدة التقسيم">
+          <button type="button" class="pill" id="unitJuzBtn" aria-pressed="true" data-unit="juz">بالأجزاء (٣٠ جزءاً)</button>
+          <button type="button" class="pill" id="unitPageBtn" aria-pressed="false" data-unit="page">بالصفحات (٦٠٤ صفحة)</button>
+        </div>
+        <p class="hint">طبعة حفص المدنية تقريباً (٦٠٤ صفحة).</p>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">٣</span> نقطة البداية</h2>
+        <div class="radio-row" role="radiogroup" aria-label="نقطة البداية">
+          <label class="radio-opt">
+            <input type="radio" name="startPoint" value="beginning" checked>
+            من أول القرآن الكريم
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="startPoint" value="custom">
+            أُكمل ختمة سابقة — أبدأ من نقطة محددة
+          </label>
+        </div>
+        <div id="customStartWrap">
+          <label for="customStartInput" id="customStartLabel" style="font-weight:600;display:block;margin-bottom:6px;">ابدأ من الجزء رقم:</label>
+          <input type="number" id="customStartInput" min="1" max="30" value="1">
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">٤</span> استثناء أيام (اختياري)</h2>
+        <label class="toggle-switch-row">
+          <input type="checkbox" class="switch-input" id="excludeToggle">
+          <span class="switch" aria-hidden="true"></span>
+          <span>أريد استثناء يوم أو أكثر من أيام القراءة</span>
+        </label>
+        <div class="weekday-grid" id="weekdayGrid" style="display:none;">
+          <label class="weekday-chip"><input type="checkbox" value="0"> الأحد</label>
+          <label class="weekday-chip"><input type="checkbox" value="1"> الاثنين</label>
+          <label class="weekday-chip"><input type="checkbox" value="2"> الثلاثاء</label>
+          <label class="weekday-chip"><input type="checkbox" value="3"> الأربعاء</label>
+          <label class="weekday-chip"><input type="checkbox" value="4"> الخميس</label>
+          <label class="weekday-chip"><input type="checkbox" value="5" checked> الجمعة</label>
+          <label class="weekday-chip"><input type="checkbox" value="6"> السبت</label>
+        </div>
+      </section>
+
+      <div class="error-msg" id="errorMsg" role="alert" aria-live="assertive"></div>
+      <button type="submit" class="btn-primary">أنشئ جدولي</button>
+    </form>
+
+    <section class="card" id="resultsCard" style="display:none;">
+      <div id="results">
+        <h2 style="justify-content:center;"><span class="num" aria-hidden="true">✓</span> جدول ختمتك</h2>
+
+        <div class="crescent-wrap">
+          <svg class="crescent-svg" viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <clipPath id="crescentClip">
+                <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z"/>
+              </clipPath>
+              <linearGradient id="goldGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#C9A05C"/>
+                <stop offset="100%" stop-color="#F0D9A8"/>
+              </linearGradient>
+            </defs>
+            <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z" fill="#232f3d" stroke="#C9A05C" stroke-width="2.5"/>
+            <g clip-path="url(#crescentClip)">
+              <rect id="fillRect" x="20" y="200" width="150" height="0" fill="url(#goldGrad)"/>
+            </g>
+          </svg>
+          <div class="crescent-pct" id="pctText">0٪</div>
+          <div class="crescent-label" id="crescentLabel">من الوقت المتبقي للختمة</div>
+        </div>
+
+        <p class="summary-line" id="summaryLine"></p>
+        <p class="summary-sub" id="summarySub"></p>
+
+        <div class="table-wrap">
+          <table class="schedule">
+            <thead>
+              <tr>
+                <th scope="col">اليوم</th>
+                <th scope="col">التاريخ</th>
+                <th scope="col">المقدار المطلوب</th>
+                <th scope="col">الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleBody"></tbody>
+          </table>
+        </div>
+
+        <div class="results-actions">
+          <button type="button" class="btn-secondary" id="printBtn">طباعة الجدول</button>
+          <button type="button" class="btn-secondary" id="downloadBtn">تحميل نسخة</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <p>هذا العمل <span class="heart">صدقة جارية</span> لوجه الله — لا يُخزَّن أي من بياناتك، وكل الحساب يتم في متصفحك فقط.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL_HIZB = 60;   // 30 juz × 2 hizb
+  var TOTAL_PAGES = 604;
+
+  var state = {
+    unit: 'juz',
+    excludeEnabled: false
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- duration presets ---------- */
+  var durationInput = $('durationInput');
+  var ramadanHint = $('ramadanHint');
+  var presetBtns = Array.prototype.slice.call(document.querySelectorAll('.pill[data-duration]'));
+
+  presetBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      btn.setAttribute('aria-pressed','true');
+      durationInput.value = btn.getAttribute('data-duration');
+      ramadanHint.style.display = btn.hasAttribute('data-ramadan') ? 'block' : 'none';
+    });
+  });
+  durationInput.addEventListener('input', function(){
+    presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+    ramadanHint.style.display = 'none';
+  });
+
+  /* ---------- default start date = today ---------- */
+  var startDateInput = $('startDate');
+  (function setDefaultDate(){
+    var d = new Date();
+    var iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    startDateInput.value = iso;
+  })();
+
+  /* ---------- unit toggle ---------- */
+  var unitJuzBtn = $('unitJuzBtn');
+  var unitPageBtn = $('unitPageBtn');
+  var customStartInput = $('customStartInput');
+  var customStartLabel = $('customStartLabel');
+
+  function setUnit(unit){
+    state.unit = unit;
+    var isJuz = unit === 'juz';
+    unitJuzBtn.setAttribute('aria-pressed', isJuz ? 'true' : 'false');
+    unitPageBtn.setAttribute('aria-pressed', isJuz ? 'false' : 'true');
+    customStartLabel.textContent = isJuz ? 'ابدأ من الجزء رقم:' : 'ابدأ من الصفحة رقم:';
+    customStartInput.min = 1;
+    customStartInput.max = isJuz ? 30 : TOTAL_PAGES;
+    if (Number(customStartInput.value) > Number(customStartInput.max)) {
+      customStartInput.value = customStartInput.max;
+    }
+  }
+  unitJuzBtn.addEventListener('click', function(){ setUnit('juz'); });
+  unitPageBtn.addEventListener('click', function(){ setUnit('page'); });
+
+  /* ---------- start point radios ---------- */
+  var customStartWrap = $('customStartWrap');
+  var startPointRadios = Array.prototype.slice.call(document.querySelectorAll('input[name="startPoint"]'));
+  startPointRadios.forEach(function(r){
+    r.addEventListener('change', function(){
+      customStartWrap.classList.toggle('show', r.value === 'custom' && r.checked);
+    });
+  });
+
+  /* ---------- exclude days ---------- */
+  var excludeToggle = $('excludeToggle');
+  var weekdayGrid = $('weekdayGrid');
+  excludeToggle.addEventListener('change', function(){
+    state.excludeEnabled = excludeToggle.checked;
+    weekdayGrid.style.display = excludeToggle.checked ? 'grid' : 'none';
+  });
+
+  /* ---------- helpers ---------- */
+  function fmtDate(d){
+    return d.toLocaleDateString('ar-u-nu-latn', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  }
+  function toArabicDigits(str){
+    return String(str);
+  }
+  function addDays(date, n){
+    var d = new Date(date);
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+  function startOfDay(d){
+    var x = new Date(d);
+    x.setHours(0,0,0,0);
+    return x;
+  }
+
+  function juzOfHizb(h){ return Math.ceil(h/2); }
+  function halfOfHizb(h){ return (h % 2 === 1) ? 1 : 2; }
+
+  function formatUnitRange(unit, a, b){
+    if (unit === 'page'){
+      return a === b ? ('صفحة ' + toArabicDigits(a)) : ('من صفحة ' + toArabicDigits(a) + ' إلى صفحة ' + toArabicDigits(b));
+    }
+    var ja = juzOfHizb(a), jb = juzOfHizb(b);
+    if (a === b){
+      return 'نصف الجزء ' + toArabicDigits(ja) + ' (' + (halfOfHizb(a) === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
+    }
+    if ((b - a + 1) === 2 && halfOfHizb(a) === 1 && halfOfHizb(b) === 2 && ja === jb){
+      return 'الجزء ' + toArabicDigits(ja);
+    }
+    if (halfOfHizb(a) === 1 && halfOfHizb(b) === 2){
+      return 'من الجزء ' + toArabicDigits(ja) + ' إلى الجزء ' + toArabicDigits(jb);
+    }
+    return 'من نصف الجزء ' + toArabicDigits(ja) + ' إلى نصف الجزء ' + toArabicDigits(jb);
+  }
+
+  /* even spread distribution (Bresenham-style) across n slots summing to `remaining` */
+  function spreadAmounts(remaining, n){
+    var amounts = [];
+    var prevCum = 0;
+    for (var i = 1; i <= n; i++){
+      var cum = Math.floor(remaining * i / n);
+      amounts.push(cum - prevCum);
+      prevCum = cum;
+    }
+    return amounts;
+  }
+
+  function showError(msg){
+    var el = $('errorMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function clearError(){
+    var el = $('errorMsg');
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+
+  /* ---------- form submit: build schedule ---------- */
+  var form = $('waqarForm');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    clearError();
+
+    var duration = parseInt(durationInput.value, 10);
+    if (!duration || duration < 1){
+      showError('الرجاء إدخال عدد أيام صحيح (١ على الأقل).');
+      return;
+    }
+    if (duration > 1000){
+      showError('عدد الأيام كبير جداً، الرجاء اختيار مدة أقصر.');
+      return;
+    }
+    var startDateVal = startDateInput.value;
+    if (!startDateVal){
+      showError('الرجاء اختيار تاريخ البداية.');
+      return;
+    }
+    var startDate = startOfDay(new Date(startDateVal + 'T00:00:00'));
+
+    var unit = state.unit;
+    var total = unit === 'juz' ? TOTAL_HIZB : TOTAL_PAGES;
+
+    var startPointVal = document.querySelector('input[name="startPoint"]:checked').value;
+    var startIdx = 1;
+    if (startPointVal === 'custom'){
+      var customVal = parseInt(customStartInput.value, 10);
+      var maxAllowed = unit === 'juz' ? 30 : TOTAL_PAGES;
+      if (!customVal || customVal < 1 || customVal > maxAllowed){
+        showError('نقطة البداية يجب أن تكون رقماً بين ١ و' + toArabicDigits(maxAllowed) + '.');
+        return;
+      }
+      startIdx = unit === 'juz' ? ((customVal - 1) * 2 + 1) : customVal;
+    }
+
+    var excludedDays = new Set();
+    if (excludeToggle.checked){
+      document.querySelectorAll('#weekdayGrid input[type="checkbox"]:checked').forEach(function(cb){
+        excludedDays.add(parseInt(cb.value, 10));
+      });
+    }
+
+    /* build calendar day list */
+    var calendarDays = [];
+    for (var i = 0; i < duration; i++){
+      var d = addDays(startDate, i);
+      calendarDays.push({ date: d, excluded: excludedDays.has(d.getDay()) });
+    }
+    var availableDays = calendarDays.filter(function(cd){ return !cd.excluded; });
+
+    if (availableDays.length < 1){
+      showError('كل الأيام في هذه المدة مستثناة! الرجاء تقليل أيام الاستثناء أو زيادة المدة.');
+      return;
+    }
+
+    var remaining = total - startIdx + 1;
+    if (remaining < 1){
+      showError('نقطة البداية تتجاوز نهاية القرآن الكريم.');
+      return;
+    }
+
+    var amounts = spreadAmounts(remaining, availableDays.length);
+    var cum = 0;
+    availableDays.forEach(function(cd, idx){
+      var amt = amounts[idx];
+      if (amt > 0){
+        cd.rangeStart = startIdx + cum;
+        cd.rangeEnd = cd.rangeStart + amt - 1;
+      }
+      cd.amount = amt;
+      cum += amt;
+    });
+
+    renderResults({
+      unit: unit,
+      total: total,
+      startIdx: startIdx,
+      calendarDays: calendarDays,
+      startDate: startDate,
+      endDate: calendarDays[calendarDays.length - 1].date,
+      readingDaysCount: availableDays.length
+    });
+  });
+
+  /* ---------- rendering ---------- */
+  function renderResults(sched){
+    var today = startOfDay(new Date());
+    var start = sched.startDate, end = sched.endDate;
+    var msPerDay = 86400000;
+    var totalSpan = Math.round((end - start) / msPerDay) + 1;
+    var elapsed = Math.round((today - start) / msPerDay) + 1;
+    var pct;
+    if (elapsed <= 0) pct = 0;
+    else if (elapsed >= totalSpan) pct = 100;
+    else pct = Math.round((elapsed / totalSpan) * 100);
+
+    /* crescent fill: bounding box y from 18 to 182 (height 164) inside viewbox */
+    var fillRect = $('fillRect');
+    var maxH = 164, baseY = 182;
+    var h = (pct / 100) * maxH;
+    fillRect.setAttribute('y', baseY - h);
+    fillRect.setAttribute('height', h);
+
+    $('pctText').textContent = toArabicDigits(pct) + '٪';
+    $('crescentLabel').textContent = pct >= 100 ? 'أتمَّ اللهُ ختمتك، تقبّل الله منك' : 'من الوقت المقرر للختمة';
+
+    var unitLabel = sched.unit === 'juz' ? 'أجزاء' : 'صفحات';
+    var totalLabel = sched.unit === 'juz' ? '٣٠ جزءاً' : (toArabicDigits(TOTAL_PAGES) + ' صفحة');
+    $('summaryLine').textContent = 'من ' + fmtDate(start) + ' إلى ' + fmtDate(end);
+    $('summarySub').textContent = 'المدة: ' + toArabicDigits(sched.calendarDays.length) + ' يوماً (منها ' +
+      toArabicDigits(sched.readingDaysCount) + ' يوم قراءة فعلي) — تقسيم ' + unitLabel + ' — الإجمالي ' + totalLabel;
+
+    var tbody = $('scheduleBody');
+    tbody.innerHTML = '';
+    sched.calendarDays.forEach(function(cd, i){
+      var tr = document.createElement('tr');
+      var dayDate = startOfDay(cd.date);
+      var isToday = dayDate.getTime() === today.getTime();
+      var isPast = dayDate.getTime() < today.getTime();
+      if (isToday) tr.classList.add('is-today');
+      if (isPast) tr.classList.add('is-past');
+
+      var amountText;
+      if (cd.excluded){
+        tr.classList.add('is-rest');
+        amountText = 'يوم راحة (مستثنى)';
+      } else if (!cd.amount){
+        tr.classList.add('is-rest');
+        amountText = 'يوم مراجعة';
+      } else {
+        amountText = formatUnitRange(sched.unit, cd.rangeStart, cd.rangeEnd);
+      }
+
+      var statusIcon = isToday ? '●' : (isPast ? '✓' : '');
+
+      tr.innerHTML =
+        '<td>' + toArabicDigits(i + 1) + '</td>' +
+        '<td>' + fmtDate(cd.date) + '</td>' +
+        '<td class="amount-cell">' + amountText + '</td>' +
+        '<td class="status-icon">' + statusIcon + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    $('resultsCard').style.display = 'block';
+    $('results').classList.add('show');
+    $('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ---------- print / download ---------- */
+  $('printBtn').addEventListener('click', function(){ window.print(); });
+
+  $('downloadBtn').addEventListener('click', function(){
+    var tableHTML = document.querySelector('table.schedule').outerHTML;
+    var summary = $('summaryLine').textContent + ' — ' + $('summarySub').textContent;
+    var doc = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
+      '<title>جدول ختمة وقار</title><style>' +
+      'body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#1B2430;background:#fff;direction:rtl;}' +
+      'h1{color:#1B2430;} p.sum{color:#555;margin-bottom:20px;}' +
+      'table{width:100%;border-collapse:collapse;font-size:14px;}' +
+      'th,td{border:1px solid #ccc;padding:8px;text-align:center;}' +
+      'th{background:#1B2430;color:#C9A05C;}' +
+      'tr:nth-child(even){background:#faf6ec;}' +
+      '.footer{margin-top:24px;color:#888;font-size:13px;text-align:center;}' +
+      '</style></head><body>' +
+      '<h1>وقار — جدول ختمة القرآن</h1>' +
+      '<p class="sum">' + summary + '</p>' +
+      tableHTML +
+      '<p class="footer">صدقة جارية لوجه الله — تم إنشاؤه بالكامل في متصفحك دون تخزين أي بيانات.</p>' +
+      '</body></html>';
+
+    var blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'جدول-ختمة-وقار.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+})();
+</script>
+</body>
+</html>
