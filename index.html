@@ -549,7 +549,7 @@
         <circle cx="72" cy="30" r="5.5" fill="#C9A05C"/>
       </svg>
     </div>
-    <h1 class="brand">وقار</h1>
+    <h1 class="brand">وَقـــار</h1>
     <p class="hadith">
       «حافظ القرآن يُوضَعُ على رَأسِه <span class="accent-word">تاجُ الوَقارِ</span>، ويُكْسى والِداهُ حُلَّتينِ لا يُقوَّمُ لهما أهْلُ الدُّنيا،
       فيقولانِ: بِمَ كُسِينا هذا؟ فيُقال: بأخْذِ وَلَدِكما القُرآنَ، ثم يُقالُ له: اقْرَأْ واصْعَدْ في دَرَجِ الجَنَّةِ وغُرَفِها،
@@ -671,7 +671,7 @@
     <!-- rendered but visually clipped to nothing; source for print and PDF export -->
     <div class="print-export-clip">
     <div id="printExport" class="print-export">
-      <h1 class="print-title">وقار — جدول ختمة القرآن</h1>
+      <h1 class="print-title">وَقـــار — جدول ختمة القرآن</h1>
       <p class="print-summary" id="printSummary"></p>
       <table class="schedule">
         <thead>
@@ -725,7 +725,10 @@
   </main>
 
   <footer class="site">
-    <p>هذا العمل <span class="heart">صدقة جارية</span> عن والدتي حفظها الله ووالدي تغمده الله بواسع رحمته.</p>
+    <p>هذا العمل <span class="heart">صدقة جارية</span> عن أبي -تغمده الله بواسع رحمته-، وأمي -حفظها الله.</p>
+    <a class="social-link" href="https://x.com/i3ahad" target="_blank" rel="noopener" aria-label="حساب X">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-7.6 8.7L23.3 22H16.7l-5.2-6.8L5.6 22H2.4l8.1-9.3L1.7 2h6.8l4.7 6.2L18.9 2Zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20Z"/></svg>
+    </a>
   </footer>
 
 </div>
@@ -751,12 +754,14 @@
   /* adaptive granularity: coarsest first. hizb/quarter are exact fractions of the
      juz the plan starts in (2 and 8 per juz respectively, by definition); page/
      halfpage anchor to the real JUZ_START_PAGE table above. */
+  var TOTAL_AYAHS = 6236;
   var LEVELS = [
     { key: 'juz',      total: 30,   label: 'بالأجزاء' },
     { key: 'hizb',     total: 60,   label: 'بالأحزاب' },
     { key: 'quarter',  total: 240,  label: 'بأرباع الحزب' },
     { key: 'page',     total: TOTAL_PAGES, label: 'بمقدار صفحة تقريباً (بالآيات)' },
-    { key: 'halfpage', total: TOTAL_PAGES * 2, label: 'بمقدار نصف صفحة تقريباً (بالآيات)' }
+    { key: 'halfpage', total: TOTAL_PAGES * 2, label: 'بمقدار نصف صفحة تقريباً (بالآيات)' },
+    { key: 'ayah',     total: TOTAL_AYAHS, label: 'بعدد آيات تقريبي (لمدد طويلة جداً)' }
   ];
   var STORAGE_KEY = 'waqar_tracker_v1';
 
@@ -936,6 +941,7 @@
   function juzToLevelUnit(startJuz, lvl){
     if (lvl.key === 'page') return JUZ_START_PAGE[startJuz];
     if (lvl.key === 'halfpage') return (JUZ_START_PAGE[startJuz] - 1) * 2 + 1;
+    if (lvl.key === 'ayah') return JUZ_START_GLOBAL_AYAH[startJuz - 1];
     var perJuz = lvl.total / JUZ_COUNT; // 1 (juz) or 2 (hizb) or 8 (quarter) — exact by definition
     return (startJuz - 1) * perJuz + 1;
   }
@@ -944,33 +950,47 @@
     return TOTAL_PAGES - JUZ_START_PAGE[startJuz] + 1;
   }
 
+  function hizbStartAyah(hizbIdx){ return QUARTER_START[(hizbIdx - 1) * 4]; }
+  function hizbEndAyah(hizbIdx){ return QUARTER_END[hizbIdx * 4 - 1]; }
+
+  /* every level always names the exact ayah range; juz/hizb/quarter also keep
+     their traditional label as context, page/halfpage are pure ayah ranges */
   function formatUnitRange(levelKey, a, b){
     if (levelKey === 'juz'){
-      return a === b ? ('الجزء ' + a) : ('من الجزء ' + a + ' إلى الجزء ' + b);
+      var label = a === b ? ('الجزء ' + a) : ('من الجزء ' + a + ' إلى الجزء ' + b);
+      return label + ' (' + ayahRangeLabel(JUZ_START_AYAH[a - 1], JUZ_END_AYAH[b - 1]) + ')';
     }
     if (levelKey === 'hizb'){
       var ja = Math.ceil(a / 2), jb = Math.ceil(b / 2);
       var haf = (a % 2 === 1) ? 1 : 2, hbf = (b % 2 === 1) ? 1 : 2;
-      if (a === b) return 'نصف الجزء ' + ja + ' (' + (haf === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
-      if ((b - a + 1) === 2 && haf === 1 && hbf === 2 && ja === jb) return 'الجزء ' + ja;
-      if (haf === 1 && hbf === 2) return 'من الجزء ' + ja + ' إلى الجزء ' + jb;
-      return 'من نصف الجزء ' + ja + ' إلى نصف الجزء ' + jb;
+      var hLabel;
+      if (a === b) hLabel = 'نصف الجزء ' + ja + ' (' + (haf === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
+      else if ((b - a + 1) === 2 && haf === 1 && hbf === 2 && ja === jb) hLabel = 'الجزء ' + ja;
+      else if (haf === 1 && hbf === 2) hLabel = 'من الجزء ' + ja + ' إلى الجزء ' + jb;
+      else hLabel = 'من نصف الجزء ' + ja + ' إلى نصف الجزء ' + jb;
+      return hLabel + ' (' + ayahRangeLabel(hizbStartAyah(a), hizbEndAyah(b)) + ')';
     }
     if (levelKey === 'quarter'){
       var qja = Math.ceil(a / 8), qjb = Math.ceil(b / 8);
       var qpa = ((a - 1) % 8) + 1, qpb = ((b - 1) % 8) + 1;
-      if (a === b) return 'الربع ' + qpa + ' من الجزء ' + qja;
-      if ((b - a + 1) === 8 && qpa === 1 && qpb === 8 && qja === qjb) return 'الجزء ' + qja;
-      if (qja === qjb) return 'من الربع ' + qpa + ' إلى الربع ' + qpb + ' من الجزء ' + qja;
-      return 'من الربع ' + qpa + ' (الجزء ' + qja + ') إلى الربع ' + qpb + ' (الجزء ' + qjb + ')';
+      var qLabel;
+      if (a === b) qLabel = 'الربع ' + qpa + ' من الجزء ' + qja;
+      else if ((b - a + 1) === 8 && qpa === 1 && qpb === 8 && qja === qjb) qLabel = 'الجزء ' + qja;
+      else if (qja === qjb) qLabel = 'من الربع ' + qpa + ' إلى الربع ' + qpb + ' من الجزء ' + qja;
+      else qLabel = 'من الربع ' + qpa + ' (الجزء ' + qja + ') إلى الربع ' + qpb + ' (الجزء ' + qjb + ')';
+      return qLabel + ' (' + ayahRangeLabel(QUARTER_START[a - 1], QUARTER_END[b - 1]) + ')';
     }
     if (levelKey === 'page'){
       return ayahRangeLabel(PAGE_START[a - 1], PAGE_END[b - 1]);
     }
-    /* halfpage: split each page at its middle ayah instead of an arbitrary half */
-    var startRef = (a % 2 === 1) ? PAGE_START[Math.ceil(a / 2) - 1] : PAGE_MID[Math.ceil(a / 2) - 1];
-    var endRef = (b % 2 === 1) ? PAGE_BEFORE_MID[Math.ceil(b / 2) - 1] : PAGE_END[Math.ceil(b / 2) - 1];
-    return ayahRangeLabel(startRef, endRef);
+    if (levelKey === 'halfpage'){
+      /* split each page at its middle ayah instead of an arbitrary half */
+      var startRef = (a % 2 === 1) ? PAGE_START[Math.ceil(a / 2) - 1] : PAGE_MID[Math.ceil(a / 2) - 1];
+      var endRef = (b % 2 === 1) ? PAGE_BEFORE_MID[Math.ceil(b / 2) - 1] : PAGE_END[Math.ceil(b / 2) - 1];
+      return ayahRangeLabel(startRef, endRef);
+    }
+    /* ayah: finest level, for plans so long even half a page/day is too much */
+    return ayahRangeLabel(AYAH_REF[a - 1], AYAH_REF[b - 1]);
   }
 
   function ayahLabel(ref){
@@ -1231,6 +1251,29 @@
     return new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
   }
 
+  /* html2canvas silently produces a blank canvas past a certain pixel height
+     (browser canvas size limits), which broke PDF export for long plans (700+
+     rows). Capture the table in bounded-height row chunks instead, one canvas
+     (and one fresh PDF page) per chunk. */
+  var PDF_ROWS_PER_CHUNK = 600;
+
+  function addCanvasToPdf(pdf, canvas, pageWidth, pageHeight, startNewPage){
+    var imgWidth = pageWidth;
+    var imgHeight = (canvas.height * imgWidth) / canvas.width;
+    var imgData = canvas.toDataURL('image/jpeg', 0.92);
+    var heightLeft = imgHeight;
+    var position = 0;
+    if (startNewPage) pdf.addPage();
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while (heightLeft > 0){
+      position -= pageHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+  }
+
   $('pdfBtn').addEventListener('click', function(){
     var btn = $('pdfBtn');
     var status = $('pdfStatus');
@@ -1253,25 +1296,38 @@
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       await nextFrame();
 
-      var canvas = await window.html2canvas($('printExport'), { scale: 2, backgroundColor: '#ffffff' });
+      var scheduleTable = document.querySelector('#printExport table.schedule');
+      var theadHtml = scheduleTable.querySelector('thead').outerHTML;
+      var allRows = Array.prototype.slice.call(scheduleTable.querySelectorAll('tbody tr'));
+      var headerHtml = document.querySelector('#printExport .print-title').outerHTML +
+        document.querySelector('#printExport .print-summary').outerHTML;
+
+      var chunks = [];
+      for (var i = 0; i < allRows.length; i += PDF_ROWS_PER_CHUNK){
+        chunks.push(allRows.slice(i, i + PDF_ROWS_PER_CHUNK));
+      }
+      if (chunks.length === 0) chunks.push([]);
+
+      var staging = document.createElement('div');
+      staging.className = 'print-export';
+      clipEl.appendChild(staging);
 
       var pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
       var pageWidth = pdf.internal.pageSize.getWidth();
       var pageHeight = pdf.internal.pageSize.getHeight();
-      var imgWidth = pageWidth;
-      var imgHeight = (canvas.height * imgWidth) / canvas.width;
-      var imgData = canvas.toDataURL('image/jpeg', 0.92);
-      var heightLeft = imgHeight;
-      var position = 0;
 
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft > 0){
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      for (var c = 0; c < chunks.length; c++){
+        if (chunks.length > 1){
+          status.textContent = 'جاري تجهيز ملف PDF... (' + (c + 1) + '/' + chunks.length + ')';
+        }
+        var rowsHtml = chunks[c].map(function(tr){ return tr.outerHTML; }).join('');
+        staging.innerHTML = (c === 0 ? headerHtml : '') + '<table class="schedule">' + theadHtml + '<tbody>' + rowsHtml + '</tbody></table>';
+        await nextFrame();
+        var canvas = await window.html2canvas(staging, { scale: 2, backgroundColor: '#ffffff' });
+        addCanvasToPdf(pdf, canvas, pageWidth, pageHeight, c > 0);
       }
+
+      clipEl.removeChild(staging);
       pdf.save('waqar-khatma-schedule.pdf');
       status.textContent = '';
     })().catch(function(){
