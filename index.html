@@ -126,6 +126,7 @@
     letter-spacing:.5px;
     color:var(--ink);
   }
+  h1.brand a{color:inherit;text-decoration:none;cursor:pointer;}
   p.hadith{
     color:var(--slate);
     font-size:.95rem;
@@ -531,11 +532,15 @@
 
   /* ===== Print ===== */
   @media print{
-    body *{visibility:hidden;}
-    #printExport, #printExport *{visibility:visible;}
+    /* display:none (not visibility:hidden) so the hidden app UI releases its
+       layout space and the schedule starts at the very top of page 1 */
+    body{background:#fff !important;}
+    header.site, footer.site, .banner, #waqarForm, #resultsCard, #trackerCard{display:none !important;}
+    .wrap{max-width:none; margin:0; padding:0;}
     .print-export-clip{position:static; width:auto; height:auto; overflow:visible;}
     #printExport{width:auto; padding:0;}
-    table.schedule thead th{background:#eee;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    table.schedule{min-width:0;}
+    table.schedule thead th{position:static; background:#eee; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
     table.schedule tbody tr.is-today{background:#f0e6c8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     table.schedule thead{display:table-header-group;}
     table.schedule tbody tr{break-inside:avoid;page-break-inside:avoid;}
@@ -561,7 +566,7 @@
         <circle cx="72" cy="30" r="5.5" fill="#C9A05C"/>
       </svg>
     </div>
-    <h1 class="brand">وَقـــار</h1>
+    <h1 class="brand"><a id="brandHomeLink" href="#" title="العودة للصفحة الرئيسية">وَقـــار</a></h1>
     <p class="hadith">
       «حافظ القرآن يُوضَعُ على رَأسِه <span class="accent-word">تاجُ الوَقارِ</span>، ويُكْسى والِداهُ حُلَّتينِ لا يُقوَّمُ لهما أهْلُ الدُّنيا،
       فيقولانِ: بِمَ كُسِينا هذا؟ فيُقال: بأخْذِ وَلَدِكما القُرآنَ، ثم يُقالُ له: اقْرَأْ واصْعَدْ في دَرَجِ الجَنَّةِ وغُرَفِها،
@@ -1120,6 +1125,14 @@
       var dayType = classifyDay(i + 1, d, isHoliday, excludedWeekdaySet, weeklyWd);
       days.push({ date: d, dayType: dayType });
     }
+    /* a monthly review immediately followed by a weekly one reads backwards
+       (the week should be wrapped up first, then the month) — swap the pair */
+    for (var j = 0; j + 1 < days.length; j++){
+      if (days[j].dayType === 'monthly' && days[j + 1].dayType === 'weekly'){
+        days[j].dayType = 'weekly';
+        days[j + 1].dayType = 'monthly';
+      }
+    }
     return days;
   }
 
@@ -1469,14 +1482,33 @@
   });
 
   /* ---------- view switching ---------- */
-  function switchView(view){
+  /* each view change gets a history entry so the browser/phone back button
+     walks back through the app instead of leaving the site */
+  var currentView = 'form';
+  function switchView(view, fromPopstate){
     $('waqarForm').style.display = view === 'form' ? '' : 'none';
     $('resultsCard').style.display = view === 'results' ? 'block' : 'none';
     $('trackerCard').style.display = view === 'tracker' ? 'block' : 'none';
     $('trackerBanner').style.display = (view === 'form' && loadTrackerData()) ? 'flex' : 'none';
     if (view === 'form') refreshBanner();
+    if (!fromPopstate && view !== currentView){
+      try{ history.pushState({ view: view }, ''); }catch(e){}
+    }
+    currentView = view;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  window.addEventListener('popstate', function(e){
+    var view = (e.state && e.state.view) || 'form';
+    if (view === 'results' && !hasGeneratedSchedule) view = 'form';
+    if (view === 'tracker' && !currentTrackerData) view = 'form';
+    switchView(view, true);
+  });
+
+  $('brandHomeLink').addEventListener('click', function(e){
+    e.preventDefault();
+    switchView('form');
+  });
 
   /* ---------- tracker: persistent 30-juz checklist ---------- */
   function defaultTasks(){
@@ -1574,6 +1606,7 @@
   });
 
   /* ---------- init ---------- */
+  try{ history.replaceState({ view: 'form' }, ''); }catch(e){}
   refreshBanner();
   recomputeDuration();
 
