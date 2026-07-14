@@ -250,7 +250,6 @@
     color:var(--slate);
   }
   .custom-duration-grid input{max-width:100%;}
-  #customDurationTotal{font-weight:700;color:var(--olive);}
   input[type="number"], input[type="date"]{
     font-family:"Cairo",sans-serif;
     font-variant-numeric: tabular-nums;
@@ -336,6 +335,26 @@
     display:none;
   }
   .error-msg.show{display:block;}
+
+  .warning-msg{
+    background:#FBF3E0;
+    color:#8A6416;
+    border:1px solid #ecd9a8;
+    border-radius:var(--radius-sm);
+    padding:10px 14px;
+    font-size:.88rem;
+    font-weight:600;
+    margin-top:14px;
+  }
+
+  .plan-preview-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:14px;
+  }
+  .plan-preview-grid .item{display:flex; flex-direction:column; gap:2px;}
+  .plan-preview-grid .item .k{color:var(--slate); font-size:.78rem; font-weight:600;}
+  .plan-preview-grid .item .v{color:var(--ink); font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums;}
 
   .btn-primary{
     display:block;
@@ -552,10 +571,10 @@
         <h2><span class="num" aria-hidden="true">١</span> مدة الختمة</h2>
         <div class="field-group">
           <div class="pill-row" role="group" aria-label="مدد مقترحة">
-            <button type="button" class="pill" data-duration="90" aria-pressed="true">٣ أشهر</button>
-            <button type="button" class="pill" data-duration="180" aria-pressed="false">٦ أشهر</button>
-            <button type="button" class="pill" data-duration="365" aria-pressed="false">سنة</button>
-            <button type="button" class="pill" data-duration="730" aria-pressed="false">سنتين</button>
+            <button type="button" class="pill" data-y="0" data-m="3" data-d="0" aria-pressed="true">٣ أشهر</button>
+            <button type="button" class="pill" data-y="0" data-m="6" data-d="0" aria-pressed="false">٦ أشهر</button>
+            <button type="button" class="pill" data-y="1" data-m="0" data-d="0" aria-pressed="false">سنة</button>
+            <button type="button" class="pill" data-y="2" data-m="0" data-d="0" aria-pressed="false">سنتين</button>
             <button type="button" class="pill" id="otherDurationBtn" aria-pressed="false">غير ذلك</button>
           </div>
           <input type="hidden" id="durationInput" value="90">
@@ -563,19 +582,20 @@
             <div class="custom-duration-grid">
               <div>
                 <label for="durYears">سنوات</label>
-                <input type="number" id="durYears" min="0" max="20" value="0" inputmode="numeric">
+                <input type="number" id="durYears" min="0" max="20" step="1" value="0" inputmode="numeric">
               </div>
               <div>
                 <label for="durMonths">أشهر</label>
-                <input type="number" id="durMonths" min="0" max="240" value="0" inputmode="numeric">
+                <input type="number" id="durMonths" min="0" max="240" step="1" value="0" inputmode="numeric">
               </div>
               <div>
                 <label for="durDays">أيام</label>
-                <input type="number" id="durDays" min="0" max="2000" value="0" inputmode="numeric">
+                <input type="number" id="durDays" min="0" max="2000" step="1" value="0" inputmode="numeric">
               </div>
             </div>
-            <p class="hint" id="customDurationTotal">الإجمالي: 0 يوم</p>
           </div>
+          <p class="hint">المدة تُحسب تقويمياً (تاريخ فعلي)، ليست بتقريب ٣٠/٣٦٥ يوماً.</p>
+          <p class="hint" id="durationRangeHint" style="font-weight:700;color:var(--ink);"></p>
         </div>
 
         <div class="field-group">
@@ -598,7 +618,7 @@
         </div>
         <div id="customStartWrap">
           <label for="customStartInput" id="customStartLabel" style="font-weight:600;display:block;margin-bottom:6px;">ابدأ من الجزء رقم:</label>
-          <input type="number" id="customStartInput" min="1" max="30" value="1">
+          <input type="number" id="customStartInput" min="1" max="30" step="1" value="1">
         </div>
       </section>
 
@@ -620,6 +640,12 @@
         </div>
       </section>
 
+      <section class="card plan-preview" id="planPreview">
+        <h2><span class="num" aria-hidden="true">◷</span> ملخص الخطة</h2>
+        <div class="plan-preview-grid" id="planPreviewGrid"></div>
+        <p class="warning-msg" id="warningMsg" style="display:none;"></p>
+      </section>
+
       <div class="error-msg" id="errorMsg" role="alert" aria-live="assertive"></div>
       <button type="submit" class="btn-primary">أنشئ جدولي</button>
     </form>
@@ -630,6 +656,7 @@
 
         <p class="summary-line" id="summaryLine"></p>
         <p class="summary-sub" id="summarySub"></p>
+        <p class="warning-msg" id="resultsWarning" style="display:none;"></p>
         <p class="hint" style="text-align:center;">الجدول اليومي التفصيلي جاهز — حمّله PDF أو اطبعه لتشوفه كامل.</p>
 
         <div class="results-actions">
@@ -710,14 +737,25 @@
   "use strict";
 
   var JUZ_COUNT = 30;
-  /* adaptive granularity: coarsest first. quarter/hizb/juz stay exact fractions
-     of the 30 juz; page/halfpage are proportional approximations for very long plans. */
+  var TOTAL_PAGES = 604;
+  /* real starting page of each juz in the standard 604-page Hafs/Madani mushaf —
+     juz boundaries fall mid-page and are NOT evenly spaced, so this table (not a
+     30-way proportional split) is what keeps "start from juz 15/30/etc." accurate. */
+  var JUZ_START_PAGE = {
+    1:1, 2:22, 3:42, 4:62, 5:82, 6:102, 7:121, 8:142, 9:162, 10:182,
+    11:201, 12:222, 13:242, 14:262, 15:282, 16:302, 17:322, 18:342, 19:362, 20:382,
+    21:402, 22:422, 23:442, 24:462, 25:482, 26:502, 27:522, 28:542, 29:562, 30:582,
+    31: TOTAL_PAGES + 1 /* sentinel: one past the last real page */
+  };
+  /* adaptive granularity: coarsest first. hizb/quarter are exact fractions of the
+     juz the plan starts in (2 and 8 per juz respectively, by definition); page/
+     halfpage anchor to the real JUZ_START_PAGE table above. */
   var LEVELS = [
     { key: 'juz',      total: 30,   label: 'بالأجزاء' },
     { key: 'hizb',     total: 60,   label: 'بالأحزاب' },
     { key: 'quarter',  total: 240,  label: 'بأرباع الحزب' },
-    { key: 'page',     total: 604,  label: 'بالصفحات' },
-    { key: 'halfpage', total: 1208, label: 'بأنصاف الصفحات' }
+    { key: 'page',     total: TOTAL_PAGES, label: 'بالصفحات' },
+    { key: 'halfpage', total: TOTAL_PAGES * 2, label: 'بأنصاف الصفحات' }
   ];
   var STORAGE_KEY = 'waqar_tracker_v1';
 
@@ -725,72 +763,6 @@
   var currentTrackerData = null;
 
   var $ = function(id){ return document.getElementById(id); };
-
-  /* ---------- duration presets ---------- */
-  var durationInput = $('durationInput');
-  var presetBtns = Array.prototype.slice.call(document.querySelectorAll('.pill[data-duration]'));
-  var otherDurationBtn = $('otherDurationBtn');
-  var customDurationWrap = $('customDurationWrap');
-  var durYears = $('durYears'), durMonths = $('durMonths'), durDays = $('durDays');
-  var customDurationTotal = $('customDurationTotal');
-
-  presetBtns.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
-      otherDurationBtn.setAttribute('aria-pressed','false');
-      btn.setAttribute('aria-pressed','true');
-      durationInput.value = btn.getAttribute('data-duration');
-      customDurationWrap.classList.remove('show');
-    });
-  });
-
-  otherDurationBtn.addEventListener('click', function(){
-    presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
-    otherDurationBtn.setAttribute('aria-pressed','true');
-    customDurationWrap.classList.add('show');
-    durYears.value = 0;
-    durMonths.value = 0;
-    durDays.value = 0;
-    updateCustomDuration();
-  });
-
-  function updateCustomDuration(){
-    var y = parseInt(durYears.value, 10) || 0;
-    var m = parseInt(durMonths.value, 10) || 0;
-    var d = parseInt(durDays.value, 10) || 0;
-    var total = (y * 365) + (m * 30) + d;
-    durationInput.value = total;
-    customDurationTotal.textContent = 'الإجمالي: ' + total + ' يوم';
-  }
-  [durYears, durMonths, durDays].forEach(function(input){
-    input.addEventListener('input', updateCustomDuration);
-  });
-
-  /* ---------- default start date = today ---------- */
-  var startDateInput = $('startDate');
-  (function setDefaultDate(){
-    var d = new Date();
-    var iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    startDateInput.value = iso;
-  })();
-
-  var customStartInput = $('customStartInput');
-
-  /* ---------- start point radios ---------- */
-  var customStartWrap = $('customStartWrap');
-  var startPointRadios = Array.prototype.slice.call(document.querySelectorAll('input[name="startPoint"]'));
-  startPointRadios.forEach(function(r){
-    r.addEventListener('change', function(){
-      customStartWrap.classList.toggle('show', r.value === 'custom' && r.checked);
-    });
-  });
-
-  /* ---------- exclude days ---------- */
-  var excludeToggle = $('excludeToggle');
-  var weekdayGrid = $('weekdayGrid');
-  excludeToggle.addEventListener('change', function(){
-    weekdayGrid.style.display = excludeToggle.checked ? 'grid' : 'none';
-  });
 
   /* ---------- helpers ---------- */
   function fmtDate(d){
@@ -806,6 +778,146 @@
     x.setHours(0,0,0,0);
     return x;
   }
+  /* real calendar arithmetic — no 30-day/365-day approximation */
+  function addCalendar(date, y, m, d){
+    var end = new Date(date);
+    end.setFullYear(end.getFullYear() + y);
+    end.setMonth(end.getMonth() + m);
+    end.setDate(end.getDate() + d);
+    return end;
+  }
+  function daysBetweenInclusive(start, end){
+    return Math.round((startOfDay(end) - startOfDay(start)) / 86400000) + 1;
+  }
+  /* strict: non-negative integers only — rejects "-1", "1.9", "", "abc" */
+  var INT_RE = /^\d+$/;
+  function parseStrictInt(raw){
+    var s = String(raw == null ? '' : raw).trim();
+    if (!INT_RE.test(s)) return null;
+    return parseInt(s, 10);
+  }
+
+  /* ---------- duration presets ---------- */
+  var durationInput = $('durationInput');
+  var presetBtns = Array.prototype.slice.call(document.querySelectorAll('.pill[data-y]'));
+  var otherDurationBtn = $('otherDurationBtn');
+  var customDurationWrap = $('customDurationWrap');
+  var durYears = $('durYears'), durMonths = $('durMonths'), durDays = $('durDays');
+  var durationRangeHint = $('durationRangeHint');
+  var durationYMD = { y: 0, m: 3, d: 0 }; // active preset/custom tuple
+
+  function recomputeDuration(){
+    var startDate = parseStartDate() || startOfDay(new Date());
+    /* "3 months" means a 3-month span (start day counts as day 1), so the
+       raw calendar-add lands one day past the last day of the plan */
+    var end = addDays(addCalendar(startDate, durationYMD.y, durationYMD.m, durationYMD.d), -1);
+    var days = daysBetweenInclusive(startDate, end);
+    durationInput.value = days;
+    durationRangeHint.textContent = days >= 1
+      ? ('من ' + fmtDate(startDate) + ' إلى ' + fmtDate(end) + ' — ' + days + ' يوماً')
+      : '';
+    updateLivePreview();
+  }
+
+  presetBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      otherDurationBtn.setAttribute('aria-pressed','false');
+      btn.setAttribute('aria-pressed','true');
+      customDurationWrap.classList.remove('show');
+      durationYMD = {
+        y: parseInt(btn.getAttribute('data-y'), 10),
+        m: parseInt(btn.getAttribute('data-m'), 10),
+        d: parseInt(btn.getAttribute('data-d'), 10)
+      };
+      recomputeDuration();
+    });
+  });
+
+  otherDurationBtn.addEventListener('click', function(){
+    presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+    otherDurationBtn.setAttribute('aria-pressed','true');
+    customDurationWrap.classList.add('show');
+    durYears.value = 0;
+    durMonths.value = 0;
+    durDays.value = 0;
+    durationYMD = { y: 0, m: 0, d: 0 };
+    recomputeDuration();
+  });
+
+  /* returns null (all valid, durationYMD updated) or a specific Arabic error string */
+  function validateCustomDuration(){
+    var fields = [
+      { input: durYears, name: 'السنوات', max: 20 },
+      { input: durMonths, name: 'الأشهر', max: 240 },
+      { input: durDays, name: 'الأيام', max: 2000 }
+    ];
+    var values = {};
+    for (var i = 0; i < fields.length; i++){
+      var f = fields[i];
+      var raw = f.input.value;
+      var n = parseStrictInt(raw);
+      if (n === null){
+        if (/^-/.test(String(raw).trim())){
+          return 'لا يمكن أن تكون قيمة ' + f.name + ' سالبة.';
+        }
+        return 'يرجى إدخال عدد صحيح دون كسور في حقل ' + f.name + '.';
+      }
+      if (n > f.max){
+        return 'قيمة ' + f.name + ' أكبر من الحد المسموح (' + f.max + ').';
+      }
+      values[f.input.id] = n;
+    }
+    durationYMD = { y: values.durYears, m: values.durMonths, d: values.durDays };
+    return null;
+  }
+
+  [durYears, durMonths, durDays].forEach(function(input){
+    input.addEventListener('input', function(){
+      var err = validateCustomDuration();
+      clearError();
+      if (err){ showError(err); return; }
+      recomputeDuration();
+    });
+  });
+
+  /* ---------- default start date = today ---------- */
+  var startDateInput = $('startDate');
+  (function setDefaultDate(){
+    var d = new Date();
+    var iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    startDateInput.value = iso;
+  })();
+  startDateInput.addEventListener('input', recomputeDuration);
+
+  function parseStartDate(){
+    if (!startDateInput.value) return null;
+    return startOfDay(new Date(startDateInput.value + 'T00:00:00'));
+  }
+
+  var customStartInput = $('customStartInput');
+
+  /* ---------- start point radios ---------- */
+  var customStartWrap = $('customStartWrap');
+  var startPointRadios = Array.prototype.slice.call(document.querySelectorAll('input[name="startPoint"]'));
+  startPointRadios.forEach(function(r){
+    r.addEventListener('change', function(){
+      customStartWrap.classList.toggle('show', r.value === 'custom' && r.checked);
+      updateLivePreview();
+    });
+  });
+  customStartInput.addEventListener('input', updateLivePreview);
+
+  /* ---------- exclude days ---------- */
+  var excludeToggle = $('excludeToggle');
+  var weekdayGrid = $('weekdayGrid');
+  excludeToggle.addEventListener('change', function(){
+    weekdayGrid.style.display = excludeToggle.checked ? 'grid' : 'none';
+    updateLivePreview();
+  });
+  document.querySelectorAll('#weekdayGrid input[type="checkbox"]').forEach(function(cb){
+    cb.addEventListener('change', updateLivePreview);
+  });
 
   /* pick the coarsest level whose remaining units still cover the reading days
      (so almost every day gets a non-zero, cleanly-labeled portion) */
@@ -821,12 +933,14 @@
   }
 
   function juzToLevelUnit(startJuz, lvl){
-    if (lvl.key === 'page' || lvl.key === 'halfpage'){
-      var frac = (startJuz - 1) / JUZ_COUNT;
-      return Math.round(frac * lvl.total) + 1;
-    }
-    var perJuz = lvl.total / JUZ_COUNT; // 1, 2, or 8
+    if (lvl.key === 'page') return JUZ_START_PAGE[startJuz];
+    if (lvl.key === 'halfpage') return (JUZ_START_PAGE[startJuz] - 1) * 2 + 1;
+    var perJuz = lvl.total / JUZ_COUNT; // 1 (juz) or 2 (hizb) or 8 (quarter) — exact by definition
     return (startJuz - 1) * perJuz + 1;
+  }
+
+  function remainingPagesFromJuz(startJuz){
+    return TOTAL_PAGES - JUZ_START_PAGE[startJuz] + 1;
   }
 
   function formatUnitRange(levelKey, a, b){
@@ -894,74 +1008,144 @@
     el.classList.remove('show');
   }
 
+  function getExcludedWeekdaySet(){
+    var set = new Set();
+    if (excludeToggle.checked){
+      document.querySelectorAll('#weekdayGrid input[type="checkbox"]:checked').forEach(function(cb){
+        set.add(parseInt(cb.value, 10));
+      });
+    }
+    return set;
+  }
+
+  function buildCalendarDays(startDate, duration, excludedWeekdaySet){
+    var days = [];
+    for (var i = 0; i < duration; i++){
+      var d = addDays(startDate, i);
+      days.push({ date: d, excluded: excludedWeekdaySet.has(d.getDay()) });
+    }
+    return days;
+  }
+
+  /* single source of truth for both the live pre-generation preview and the
+     actual table build, so the two can never disagree */
+  function computePlan(){
+    var duration = parseStrictInt(durationInput.value);
+    if (duration === null || duration < 1){
+      return { error: 'يرجى اختيار تاريخ بداية ومدة صحيحة أولاً.' };
+    }
+    if (duration > 8000){
+      return { error: 'عدد الأيام كبير جداً، الرجاء اختيار مدة أقصر.' };
+    }
+    var startDate = parseStartDate();
+    if (!startDate){
+      return { error: 'يرجى اختيار تاريخ بداية صحيح.' };
+    }
+
+    var startPointVal = document.querySelector('input[name="startPoint"]:checked').value;
+    var startJuz = 1;
+    if (startPointVal === 'custom'){
+      var customVal = parseStrictInt(customStartInput.value);
+      if (customVal === null){
+        return { error: 'نقطة البداية يجب أن تكون عدداً صحيحاً دون كسور أو قيم سالبة.' };
+      }
+      if (customVal < 1 || customVal > 30){
+        return { error: 'نقطة البداية يجب أن تكون رقماً بين ١ و٣٠.' };
+      }
+      startJuz = customVal;
+    }
+
+    var excludedWeekdaySet = getExcludedWeekdaySet();
+    var calendarDays = buildCalendarDays(startDate, duration, excludedWeekdaySet);
+    var availableDays = calendarDays.filter(function(cd){ return !cd.excluded; });
+    var excludedCount = calendarDays.length - availableDays.length;
+
+    if (availableDays.length < 1){
+      return { error: 'يجب اختيار يوم واحد على الأقل للحفظ أو القراءة.' };
+    }
+
+    var picked = pickLevel(startJuz, availableDays.length);
+    var level = picked.level, startIdx = picked.startUnit, remaining = picked.remaining;
+    if (remaining < 1){
+      return { error: 'نقطة البداية تتجاوز نهاية القرآن الكريم.' };
+    }
+
+    var remainingPages = remainingPagesFromJuz(startJuz);
+
+    return {
+      ok: true,
+      startDate: startDate,
+      endDate: calendarDays[calendarDays.length - 1].date,
+      duration: duration,
+      startJuz: startJuz,
+      startPointVal: startPointVal,
+      calendarDays: calendarDays,
+      availableDays: availableDays,
+      excludedCount: excludedCount,
+      level: level,
+      startIdx: startIdx,
+      remaining: remaining,
+      remainingPages: remainingPages,
+      avgPerDay: remainingPages / availableDays.length,
+      tooLong: remaining < availableDays.length
+    };
+  }
+
+  var TOO_LONG_MSG = 'المدة المختارة أطول من المقدار المتبقي. يمكنك تقصير مدة الخطة أو استخدام الأيام الإضافية للمراجعة.';
+
+  function updateLivePreview(){
+    var grid = $('planPreviewGrid');
+    var warn = $('warningMsg');
+    var plan = computePlan();
+    if (!plan.ok){
+      grid.innerHTML = '<p class="hint">' + plan.error + '</p>';
+      warn.style.display = 'none';
+      return;
+    }
+    var startLabel = plan.startPointVal === 'custom' ? ('الجزء ' + plan.startJuz) : 'من أول القرآن';
+    var avgRounded = Math.round(plan.avgPerDay * 10) / 10;
+    var items = [
+      ['نقطة البداية', startLabel],
+      ['مدة الخطة الإجمالية', plan.duration + ' يوماً'],
+      ['أيام العمل الفعلية', plan.availableDays.length + ' يوماً'],
+      ['الأيام المستثناة', plan.excludedCount + ' يوماً'],
+      ['الصفحات المتبقية', plan.remainingPages + ' صفحة'],
+      ['المتوسط اليومي', '≈ ' + avgRounded + ' صفحة'],
+      ['وحدة العرض المستخدمة', plan.level.label]
+    ];
+    grid.innerHTML = items.map(function(it){
+      return '<div class="item"><span class="k">' + it[0] + '</span><span class="v">' + it[1] + '</span></div>';
+    }).join('');
+
+    if (plan.tooLong){
+      warn.textContent = TOO_LONG_MSG;
+      warn.style.display = 'block';
+    } else {
+      warn.style.display = 'none';
+    }
+  }
+
   /* ---------- form submit: build schedule ---------- */
   var form = $('waqarForm');
   form.addEventListener('submit', function(e){
     e.preventDefault();
     clearError();
 
-    var duration = parseInt(durationInput.value, 10);
-    if (!duration || duration < 1){
-      showError('الرجاء إدخال عدد أيام صحيح (١ على الأقل).');
-      return;
-    }
-    if (duration > 2000){
-      showError('عدد الأيام كبير جداً، الرجاء اختيار مدة أقصر.');
-      return;
-    }
-    var startDateVal = startDateInput.value;
-    if (!startDateVal){
-      showError('الرجاء اختيار تاريخ البداية.');
-      return;
-    }
-    var startDate = startOfDay(new Date(startDateVal + 'T00:00:00'));
-
-    var startPointVal = document.querySelector('input[name="startPoint"]:checked').value;
-    var startJuz = 1;
-    if (startPointVal === 'custom'){
-      var customVal = parseInt(customStartInput.value, 10);
-      if (!customVal || customVal < 1 || customVal > 30){
-        showError('نقطة البداية يجب أن تكون رقماً بين ١ و٣٠.');
-        return;
-      }
-      startJuz = customVal;
+    if (customDurationWrap.classList.contains('show')){
+      var durErr = validateCustomDuration();
+      if (durErr){ showError(durErr); return; }
+      recomputeDuration();
     }
 
-    var excludedDays = new Set();
-    if (excludeToggle.checked){
-      document.querySelectorAll('#weekdayGrid input[type="checkbox"]:checked').forEach(function(cb){
-        excludedDays.add(parseInt(cb.value, 10));
-      });
-    }
+    var plan = computePlan();
+    if (!plan.ok){ showError(plan.error); return; }
 
-    /* build calendar day list */
-    var calendarDays = [];
-    for (var i = 0; i < duration; i++){
-      var d = addDays(startDate, i);
-      calendarDays.push({ date: d, excluded: excludedDays.has(d.getDay()) });
-    }
-    var availableDays = calendarDays.filter(function(cd){ return !cd.excluded; });
-
-    if (availableDays.length < 1){
-      showError('كل الأيام في هذه المدة مستثناة! الرجاء تقليل أيام الاستثناء أو زيادة المدة.');
-      return;
-    }
-
-    var picked = pickLevel(startJuz, availableDays.length);
-    var level = picked.level;
-    var startIdx = picked.startUnit;
-    var remaining = picked.remaining;
-    if (remaining < 1){
-      showError('نقطة البداية تتجاوز نهاية القرآن الكريم.');
-      return;
-    }
-
-    var amounts = spreadAmounts(remaining, availableDays.length);
+    var amounts = spreadAmounts(plan.remaining, plan.availableDays.length);
     var cum = 0;
-    availableDays.forEach(function(cd, idx){
+    plan.availableDays.forEach(function(cd, idx){
       var amt = amounts[idx];
       if (amt > 0){
-        cd.rangeStart = startIdx + cum;
+        cd.rangeStart = plan.startIdx + cum;
         cd.rangeEnd = cd.rangeStart + amt - 1;
       }
       cd.amount = amt;
@@ -969,11 +1153,12 @@
     });
 
     renderResults({
-      level: level,
-      calendarDays: calendarDays,
-      startDate: startDate,
-      endDate: calendarDays[calendarDays.length - 1].date,
-      readingDaysCount: availableDays.length
+      level: plan.level,
+      calendarDays: plan.calendarDays,
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      readingDaysCount: plan.availableDays.length,
+      tooLong: plan.tooLong
     });
   });
 
@@ -985,6 +1170,14 @@
     $('summaryLine').textContent = line;
     $('summarySub').textContent = sub;
     $('printSummary').textContent = line + ' — ' + sub;
+
+    var resultsWarning = $('resultsWarning');
+    if (sched.tooLong){
+      resultsWarning.textContent = TOO_LONG_MSG;
+      resultsWarning.style.display = 'block';
+    } else {
+      resultsWarning.style.display = 'none';
+    }
 
     var today = startOfDay(new Date());
     var tbody = $('scheduleBody');
@@ -1192,6 +1385,7 @@
 
   /* ---------- init ---------- */
   refreshBanner();
+  recomputeDuration();
 
 })();
 </script>
