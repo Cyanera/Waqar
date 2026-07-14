@@ -4,28 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>وقار — مولّد جدول ختمة القرآن</title>
-<meta name="description" content="وقار: أداة مجانية بالكامل لإنشاء جدول ختمة قرآن مخصص حسب مدتك ونقطة بدايتك، يعمل بالكامل في متصفحك دون أي تخزين لبياناتك.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%231B2430'/%3E%3Cpath d='M62 18a34 34 0 1 0 0 64 40 40 0 1 1 0-64Z' fill='%23C9A05C'/%3E%3C/svg%3E">
+<meta name="description" content="وقار: أداة مجانية بالكامل لإنشاء جدول ختمة قرآن مخصص حسب مدتك ونقطة بدايتك، يعمل بالكامل في متصفحك دون أي تخزين لبياناتك على أي سيرفر.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23FBF7EE'/%3E%3Cpath d='M18,78 L18,58 L34,28 L44,48 L50,18 L56,48 L66,28 L82,58 L82,78 Z' fill='%23C9A05C'/%3E%3Ccircle cx='34' cy='28' r='6' fill='%231B2430'/%3E%3Ccircle cx='50' cy='18' r='7' fill='%231B2430'/%3E%3Ccircle cx='66' cy='28' r='6' fill='%231B2430'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1B2430;
-    --ink-2:#141b25;
-    --cream:#F5EFE3;
-    --cream-dim:#e9e1cf;
+    --cream:#FBF7EE;
+    --cream-2:#F4ECD9;
+    --card:#FFFFFF;
+    --card-tint:#F8F2E4;
     --gold:#C9A05C;
-    --gold-bright:#e0b96f;
+    --gold-soft:#EFE3C6;
+    --gold-deep:#A47C3E;
     --slate:#7A8B99;
     --olive:#4A6D5C;
-    --olive-bright:#5f8873;
-    --danger:#b5654f;
+    --olive-soft:#E3ECE6;
+    --danger:#B5654F;
+    --danger-soft:#FBE9E4;
     --radius-lg:20px;
     --radius-md:14px;
     --radius-sm:9px;
-    --shadow-card: 0 18px 45px -18px rgba(0,0,0,.55);
-    --dur:.35s;
+    --shadow-card: 0 14px 34px -18px rgba(27,36,48,.18);
+    --dur:.3s;
     --ease: cubic-bezier(.2,.7,.2,1);
   }
 
@@ -40,23 +43,14 @@
     margin:0;
     min-height:100vh;
     font-family:"IBM Plex Sans Arabic","Cairo",sans-serif;
-    color:var(--cream);
+    color:var(--ink);
     background:
-      radial-gradient(1.5px 1.5px at 8% 12%, rgba(245,239,227,.55) 0, transparent 60%),
-      radial-gradient(1.5px 1.5px at 22% 28%, rgba(245,239,227,.4) 0, transparent 60%),
-      radial-gradient(1px 1px at 38% 8%, rgba(245,239,227,.5) 0, transparent 60%),
-      radial-gradient(1.5px 1.5px at 55% 22%, rgba(245,239,227,.35) 0, transparent 60%),
-      radial-gradient(1px 1px at 68% 6%, rgba(245,239,227,.45) 0, transparent 60%),
-      radial-gradient(1.5px 1.5px at 82% 18%, rgba(245,239,227,.4) 0, transparent 60%),
-      radial-gradient(1px 1px at 92% 32%, rgba(245,239,227,.35) 0, transparent 60%),
-      radial-gradient(1.5px 1.5px at 14% 45%, rgba(245,239,227,.3) 0, transparent 60%),
-      radial-gradient(1px 1px at 46% 38%, rgba(245,239,227,.3) 0, transparent 60%),
-      radial-gradient(1.5px 1.5px at 78% 48%, rgba(245,239,227,.28) 0, transparent 60%),
-      linear-gradient(180deg, #10161f 0%, var(--ink) 38%, #232f3d 78%, #3a3220 130%);
+      radial-gradient(60% 40% at 50% 0%, rgba(201,160,92,.14) 0%, rgba(201,160,92,0) 70%),
+      linear-gradient(180deg, #FDFBF6 0%, var(--cream) 45%, var(--cream-2) 100%);
     background-attachment:fixed;
     background-repeat:no-repeat;
     background-size:cover;
-    line-height:1.6;
+    line-height:1.65;
   }
 
   .wrap{max-width:900px;margin:0 auto;padding:28px 18px 60px;}
@@ -64,14 +58,14 @@
   /* ===== Header ===== */
   header.site{
     text-align:center;
-    padding:34px 10px 18px;
+    padding:30px 10px 16px;
   }
   .brand-mark{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    width:64px;height:64px;
-    margin-bottom:10px;
+    width:60px;height:60px;
+    margin-bottom:8px;
   }
   .brand-mark svg{width:100%;height:100%;}
   h1.brand{
@@ -80,12 +74,11 @@
     font-size:clamp(2.2rem,6vw,3rem);
     margin:0;
     letter-spacing:.5px;
-    color:var(--cream);
-    text-shadow:0 2px 24px rgba(201,160,92,.25);
+    color:var(--ink);
   }
   p.tagline{
-    color:var(--gold-bright);
-    font-weight:600;
+    color:var(--gold-deep);
+    font-weight:700;
     font-size:1.05rem;
     margin:8px auto 4px;
     max-width:32em;
@@ -97,15 +90,37 @@
     margin:6px auto 0;
     line-height:1.9;
   }
+  .accent-word{color:var(--gold-deep);font-weight:800;}
+
+  /* ===== saved-tracker banner ===== */
+  .banner{
+    background:var(--olive-soft);
+    border:1px solid #cfe0d6;
+    border-radius:var(--radius-md);
+    padding:16px 18px;
+    margin-top:20px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .banner p{margin:0;font-weight:700;color:var(--ink);font-size:.95rem;}
+  .banner .banner-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .banner .link-btn{
+    background:none;border:none;color:var(--danger);font-size:.82rem;font-weight:600;
+    text-decoration:underline;cursor:pointer;padding:4px;
+  }
 
   /* ===== Cards ===== */
   .card{
-    background:var(--cream);
+    background:var(--card);
     color:var(--ink);
     border-radius:var(--radius-lg);
     box-shadow:var(--shadow-card);
     padding:26px 22px;
     margin-top:22px;
+    border:1px solid #eee3cc;
   }
   .card h2{
     font-family:"Cairo",sans-serif;
@@ -117,7 +132,7 @@
   }
   .card h2 .num{
     background:var(--ink);
-    color:var(--gold-bright);
+    color:var(--gold-soft);
     width:30px;height:30px;
     border-radius:50%;
     display:inline-flex;align-items:center;justify-content:center;
@@ -161,11 +176,11 @@
   .pill:hover{transform:translateY(-1px);}
   .pill[aria-pressed="true"], .pill[aria-checked="true"]{
     background:var(--ink);
-    color:var(--gold-bright);
+    color:var(--gold-soft);
     border-color:var(--ink);
   }
   .pill:focus-visible, button:focus-visible, input:focus-visible, a:focus-visible{
-    outline:3px solid var(--gold);
+    outline:3px solid var(--gold-deep);
     outline-offset:3px;
   }
 
@@ -174,6 +189,7 @@
     align-items:center;
     gap:10px;
     margin-top:10px;
+    flex-wrap:wrap;
   }
   input[type="number"], input[type="date"]{
     font-family:"Cairo",sans-serif;
@@ -182,14 +198,14 @@
     font-weight:600;
     padding:11px 14px;
     border-radius:var(--radius-sm);
-    border:2px solid #d9cfb8;
+    border:2px solid #e4d9bd;
     background:#fff;
     color:var(--ink);
     width:100%;
     max-width:220px;
   }
   input[type="date"]{max-width:260px;}
-  input:focus{border-color:var(--gold);}
+  input:focus{border-color:var(--gold-deep);}
 
   .toggle-switch-row{
     display:flex;
@@ -201,7 +217,7 @@
   .switch{
     position:relative;
     width:50px;height:28px;
-    background:#d9cfb8;
+    background:#e4d9bd;
     border-radius:999px;
     transition:background var(--dur) var(--ease);
     flex:none;
@@ -214,12 +230,12 @@
     background:#fff;
     border-radius:50%;
     transition:transform var(--dur) var(--ease);
-    box-shadow:0 2px 6px rgba(0,0,0,.25);
+    box-shadow:0 2px 6px rgba(0,0,0,.18);
   }
   input.switch-input{position:absolute;opacity:0;width:1px;height:1px;}
   input.switch-input:checked + .switch{background:var(--olive);}
   input.switch-input:checked + .switch::after{transform:translateX(-22px);}
-  input.switch-input:focus-visible + .switch{outline:3px solid var(--gold);outline-offset:3px;}
+  input.switch-input:focus-visible + .switch{outline:3px solid var(--gold-deep);outline-offset:3px;}
 
   .weekday-grid{
     display:grid;
@@ -232,7 +248,7 @@
     align-items:center;
     gap:6px;
     background:#fff;
-    border:2px solid #d9cfb8;
+    border:2px solid #e4d9bd;
     border-radius:var(--radius-sm);
     padding:8px 10px;
     font-size:.85rem;
@@ -249,7 +265,7 @@
   #customStartWrap.show{display:block;}
 
   .error-msg{
-    background:#fbe9e4;
+    background:var(--danger-soft);
     color:var(--danger);
     border:1px solid #e3b3a4;
     border-radius:var(--radius-sm);
@@ -264,7 +280,7 @@
   .btn-primary{
     display:block;
     width:100%;
-    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    background:linear-gradient(180deg, #D8B476, var(--gold));
     color:var(--ink);
     font-family:"Cairo",sans-serif;
     font-weight:800;
@@ -274,10 +290,10 @@
     padding:15px 20px;
     cursor:pointer;
     margin-top:8px;
-    box-shadow:0 10px 24px -10px rgba(201,160,92,.6);
+    box-shadow:0 10px 24px -12px rgba(164,124,62,.5);
     transition:transform .15s var(--ease), box-shadow var(--dur) var(--ease);
   }
-  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -10px rgba(201,160,92,.75);}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 28px -12px rgba(164,124,62,.6);}
   .btn-primary:active{transform:translateY(0);}
 
   .btn-secondary{
@@ -292,12 +308,11 @@
     cursor:pointer;
     transition:background var(--dur) var(--ease), color var(--dur) var(--ease);
   }
-  .btn-secondary:hover{background:var(--ink);color:var(--gold-bright);}
+  .btn-secondary:hover{background:var(--ink);color:var(--gold-soft);}
+
+  .btn-primary.slim{padding:10px 20px;font-size:.95rem;width:auto;margin:0;}
 
   /* ===== Results ===== */
-  #results{display:none;}
-  #results.show{display:block;}
-
   .summary-line{
     text-align:center;
     color:var(--ink);
@@ -312,15 +327,15 @@
     margin-bottom:20px;
   }
 
-  /* crescent progress */
+  /* crescent progress (used in the tracker) */
   .crescent-wrap{
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:10px;
-    margin:6px 0 26px;
+    gap:8px;
+    margin:6px 0 24px;
   }
-  .crescent-svg{width:160px;height:160px;filter:drop-shadow(0 8px 20px rgba(201,160,92,.35));}
+  .crescent-svg{width:150px;height:150px;filter:drop-shadow(0 6px 16px rgba(164,124,62,.25));}
   #fillRect{transition: y var(--dur) var(--ease), height var(--dur) var(--ease);}
   .crescent-pct{
     font-family:"Cairo",sans-serif;
@@ -334,7 +349,7 @@
   .table-wrap{
     overflow-x:auto;
     border-radius:var(--radius-md);
-    border:1px solid #e2d8c2;
+    border:1px solid #ecdfc0;
   }
   table.schedule{
     width:100%;
@@ -344,7 +359,7 @@
   }
   table.schedule thead th{
     background:var(--ink);
-    color:var(--gold-bright);
+    color:var(--gold-soft);
     font-weight:700;
     padding:12px 10px;
     text-align:center;
@@ -353,11 +368,11 @@
   table.schedule tbody td{
     padding:10px;
     text-align:center;
-    border-bottom:1px solid #ece4d2;
+    border-bottom:1px solid #f1e7cf;
     font-variant-numeric:tabular-nums;
   }
-  table.schedule tbody tr:nth-child(even){background:#faf6ec;}
-  table.schedule tbody tr.is-today{background:#e9dcb8;}
+  table.schedule tbody tr:nth-child(even){background:var(--card-tint);}
+  table.schedule tbody tr.is-today{background:var(--gold-soft);}
   table.schedule tbody tr.is-rest td{color:var(--slate);font-style:italic;}
   table.schedule tbody tr.is-past .status-icon{color:var(--olive);}
   .status-icon{font-weight:900;}
@@ -371,22 +386,49 @@
     margin-top:22px;
   }
 
+  /* ===== Tracker ===== */
+  .task-list{
+    max-height:56vh;
+    overflow-y:auto;
+    border:1px solid #ecdfc0;
+    border-radius:var(--radius-md);
+    padding:8px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .task-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card-tint);
+    border:1px solid #f1e7cf;
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    cursor:pointer;
+    transition:background var(--dur) var(--ease);
+  }
+  .task-row input{width:20px;height:20px;flex:none;accent-color:var(--olive);}
+  .task-row span{font-weight:700;font-size:.98rem;}
+  .task-row.done{background:var(--olive-soft);border-color:#cfe0d6;}
+  .task-row.done span{color:var(--olive);text-decoration:line-through;text-decoration-thickness:2px;}
+
   footer.site{
     text-align:center;
     color:var(--slate);
     font-size:.85rem;
     margin-top:40px;
     padding-top:20px;
-    border-top:1px solid rgba(122,139,153,.25);
+    border-top:1px solid #e9dfc8;
   }
-  footer.site .heart{color:var(--gold);}
+  footer.site .heart{color:var(--gold-deep);}
 
   /* ===== Print ===== */
   @media print{
     body{background:#fff !important;color:#000;}
-    header.site, #waqarForm, .card:not(#resultsCard), .results-actions, .crescent-wrap{display:none !important;}
+    header.site, #waqarForm, .banner, .card:not(#resultsCard), .results-actions, .hint-print-only-hide{display:none !important;}
     #results{display:block !important;}
-    .card{box-shadow:none;color:#000;background:#fff;}
+    .card{box-shadow:none;color:#000;background:#fff;border:none;}
     table.schedule thead th{background:#eee;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     table.schedule tbody tr.is-today{background:#f0e6c8 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
@@ -403,18 +445,29 @@
 
   <header class="site">
     <div class="brand-mark" aria-hidden="true">
-      <svg viewBox="0 0 100 100">
-        <path d="M62 12a38 38 0 1 0 0 76 45 45 0 1 1 0-76Z" fill="#C9A05C"/>
-        <path d="M76 24l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#F5EFE3"/>
+      <svg viewBox="0 0 100 90">
+        <path d="M12,80 L12,60 L28,30 L40,52 L50,18 L60,52 L72,30 L88,60 L88,80 Z" fill="#C9A05C" stroke="#A47C3E" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="12" y="72" width="76" height="10" rx="2" fill="#A47C3E"/>
+        <circle cx="28" cy="30" r="5.5" fill="#1B2430"/>
+        <circle cx="50" cy="18" r="6.5" fill="#1B2430"/>
+        <circle cx="72" cy="30" r="5.5" fill="#1B2430"/>
       </svg>
     </div>
     <h1 class="brand">وقار</h1>
     <p class="tagline">لأن ختمة القرآن تُلبس والديك تاجاً يوم القيامة</p>
     <p class="hadith">
-      «مَن قرأ القرآن وعمل بما فيه أُلبس والداه تاجاً يوم القيامة ضياؤه أحسن من ضياء الشمس»
+      «مَن قرأ القرآن وعمل بما فيه أُلبس والداه <span class="accent-word">تاجاً</span> يوم القيامة ضياؤه أحسن من ضياء الشمس»
       — رواه أبو داود والترمذي
     </p>
   </header>
+
+  <div class="banner" id="trackerBanner" style="display:none;">
+    <p id="bannerText"></p>
+    <div class="banner-actions">
+      <button type="button" class="btn-primary slim" id="bannerOpenBtn">متابعة المتتبع</button>
+      <button type="button" class="link-btn" id="bannerDeleteBtn">حذف المتتبع</button>
+    </div>
+  </div>
 
   <main>
     <form id="waqarForm" novalidate>
@@ -422,15 +475,15 @@
         <h2><span class="num" aria-hidden="true">١</span> مدة الختمة</h2>
         <div class="field-group">
           <div class="pill-row" role="group" aria-label="مدد مقترحة">
-            <button type="button" class="pill" data-duration="30" aria-pressed="false">٣٠ يوماً</button>
-            <button type="button" class="pill" data-duration="60" aria-pressed="false">٦٠ يوماً</button>
-            <button type="button" class="pill" data-duration="30" data-ramadan="1" aria-pressed="false">رمضان</button>
+            <button type="button" class="pill" data-duration="90" aria-pressed="true">٣ أشهر</button>
+            <button type="button" class="pill" data-duration="180" aria-pressed="false">٦ أشهر</button>
+            <button type="button" class="pill" data-duration="365" aria-pressed="false">سنة</button>
+            <button type="button" class="pill" data-duration="730" aria-pressed="false">سنتين</button>
           </div>
           <div class="num-input-wrap">
             <label for="durationInput" style="font-weight:600;">أو أدخل عدد الأيام:</label>
-            <input type="number" id="durationInput" min="1" max="1000" value="30" inputmode="numeric">
+            <input type="number" id="durationInput" min="1" max="2000" value="90" inputmode="numeric">
           </div>
-          <p class="hint" id="ramadanHint" style="display:none;">رمضان قد يكون ٢٩ أو ٣٠ يوماً — عدّل الرقم إذا لزم.</p>
         </div>
 
         <div class="field-group">
@@ -492,26 +545,6 @@
       <div id="results">
         <h2 style="justify-content:center;"><span class="num" aria-hidden="true">✓</span> جدول ختمتك</h2>
 
-        <div class="crescent-wrap">
-          <svg class="crescent-svg" viewBox="0 0 200 200" aria-hidden="true">
-            <defs>
-              <clipPath id="crescentClip">
-                <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z"/>
-              </clipPath>
-              <linearGradient id="goldGrad" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#C9A05C"/>
-                <stop offset="100%" stop-color="#F0D9A8"/>
-              </linearGradient>
-            </defs>
-            <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z" fill="#232f3d" stroke="#C9A05C" stroke-width="2.5"/>
-            <g clip-path="url(#crescentClip)">
-              <rect id="fillRect" x="20" y="200" width="150" height="0" fill="url(#goldGrad)"/>
-            </g>
-          </svg>
-          <div class="crescent-pct" id="pctText">0٪</div>
-          <div class="crescent-label" id="crescentLabel">من الوقت المتبقي للختمة</div>
-        </div>
-
         <p class="summary-line" id="summaryLine"></p>
         <p class="summary-sub" id="summarySub"></p>
 
@@ -530,15 +563,48 @@
         </div>
 
         <div class="results-actions">
-          <button type="button" class="btn-secondary" id="printBtn">طباعة الجدول</button>
-          <button type="button" class="btn-secondary" id="downloadBtn">تحميل نسخة</button>
+          <button type="button" class="btn-primary slim" id="trackerBtn">متتبع الختمة</button>
+          <button type="button" class="btn-secondary" id="printBtn">طباعة</button>
+          <button type="button" class="btn-secondary" id="pdfBtn">تحميل PDF</button>
         </div>
+        <p class="hint hint-print-only-hide" style="text-align:center;">لتحميل PDF: من نافذة الطباعة اختر «حفظ كـ PDF» كوجهة.</p>
+      </div>
+    </section>
+
+    <section class="card" id="trackerCard" style="display:none;">
+      <h2 style="justify-content:center;"><span class="num" aria-hidden="true">◈</span> متتبع الختمة</h2>
+
+      <div class="crescent-wrap">
+        <svg class="crescent-svg" viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <clipPath id="crescentClip">
+              <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z"/>
+            </clipPath>
+            <linearGradient id="goldGrad" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#C9A05C"/>
+              <stop offset="100%" stop-color="#F0D9A8"/>
+            </linearGradient>
+          </defs>
+          <path d="M112,18 A82,82 0 1 0 112,182 A62,62 0 1 1 112,18 Z" fill="#F4ECD9" stroke="#C9A05C" stroke-width="2.5"/>
+          <g clip-path="url(#crescentClip)">
+            <rect id="fillRect" x="20" y="200" width="150" height="0" fill="url(#goldGrad)"/>
+          </g>
+        </svg>
+        <div class="crescent-pct" id="pctText">0٪</div>
+        <div class="crescent-label" id="crescentLabel">0 من 30 جزءاً مكتملة</div>
+      </div>
+
+      <div class="task-list" id="taskList"></div>
+
+      <div class="results-actions">
+        <button type="button" class="btn-secondary" id="backToScheduleBtn">عودة للجدول</button>
+        <button type="button" class="btn-secondary" id="newKhatmaBtn">ختمة جديدة</button>
       </div>
     </section>
   </main>
 
   <footer class="site">
-    <p>هذا العمل <span class="heart">صدقة جارية</span> لوجه الله — لا يُخزَّن أي من بياناتك، وكل الحساب يتم في متصفحك فقط.</p>
+    <p>هذا العمل <span class="heart">صدقة جارية</span> لوجه الله — لا يُخزَّن أي من بياناتك على أي سيرفر، وكل الحساب والتخزين يتم في متصفحك فقط.</p>
   </footer>
 
 </div>
@@ -549,17 +615,17 @@
 
   var TOTAL_HIZB = 60;   // 30 juz × 2 hizb
   var TOTAL_PAGES = 604;
+  var JUZ_COUNT = 30;
+  var STORAGE_KEY = 'waqar_tracker_v1';
 
-  var state = {
-    unit: 'juz',
-    excludeEnabled: false
-  };
+  var state = { unit: 'juz' };
+  var hasGeneratedSchedule = false;
+  var currentTrackerData = null;
 
   var $ = function(id){ return document.getElementById(id); };
 
   /* ---------- duration presets ---------- */
   var durationInput = $('durationInput');
-  var ramadanHint = $('ramadanHint');
   var presetBtns = Array.prototype.slice.call(document.querySelectorAll('.pill[data-duration]'));
 
   presetBtns.forEach(function(btn){
@@ -567,12 +633,10 @@
       presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
       btn.setAttribute('aria-pressed','true');
       durationInput.value = btn.getAttribute('data-duration');
-      ramadanHint.style.display = btn.hasAttribute('data-ramadan') ? 'block' : 'none';
     });
   });
   durationInput.addEventListener('input', function(){
     presetBtns.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
-    ramadanHint.style.display = 'none';
   });
 
   /* ---------- default start date = today ---------- */
@@ -617,16 +681,12 @@
   var excludeToggle = $('excludeToggle');
   var weekdayGrid = $('weekdayGrid');
   excludeToggle.addEventListener('change', function(){
-    state.excludeEnabled = excludeToggle.checked;
     weekdayGrid.style.display = excludeToggle.checked ? 'grid' : 'none';
   });
 
   /* ---------- helpers ---------- */
   function fmtDate(d){
     return d.toLocaleDateString('ar-u-nu-latn', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  }
-  function toArabicDigits(str){
-    return String(str);
   }
   function addDays(date, n){
     var d = new Date(date);
@@ -644,19 +704,19 @@
 
   function formatUnitRange(unit, a, b){
     if (unit === 'page'){
-      return a === b ? ('صفحة ' + toArabicDigits(a)) : ('من صفحة ' + toArabicDigits(a) + ' إلى صفحة ' + toArabicDigits(b));
+      return a === b ? ('صفحة ' + a) : ('من صفحة ' + a + ' إلى صفحة ' + b);
     }
     var ja = juzOfHizb(a), jb = juzOfHizb(b);
     if (a === b){
-      return 'نصف الجزء ' + toArabicDigits(ja) + ' (' + (halfOfHizb(a) === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
+      return 'نصف الجزء ' + ja + ' (' + (halfOfHizb(a) === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
     }
     if ((b - a + 1) === 2 && halfOfHizb(a) === 1 && halfOfHizb(b) === 2 && ja === jb){
-      return 'الجزء ' + toArabicDigits(ja);
+      return 'الجزء ' + ja;
     }
     if (halfOfHizb(a) === 1 && halfOfHizb(b) === 2){
-      return 'من الجزء ' + toArabicDigits(ja) + ' إلى الجزء ' + toArabicDigits(jb);
+      return 'من الجزء ' + ja + ' إلى الجزء ' + jb;
     }
-    return 'من نصف الجزء ' + toArabicDigits(ja) + ' إلى نصف الجزء ' + toArabicDigits(jb);
+    return 'من نصف الجزء ' + ja + ' إلى نصف الجزء ' + jb;
   }
 
   /* even spread distribution (Bresenham-style) across n slots summing to `remaining` */
@@ -693,7 +753,7 @@
       showError('الرجاء إدخال عدد أيام صحيح (١ على الأقل).');
       return;
     }
-    if (duration > 1000){
+    if (duration > 2000){
       showError('عدد الأيام كبير جداً، الرجاء اختيار مدة أقصر.');
       return;
     }
@@ -713,7 +773,7 @@
       var customVal = parseInt(customStartInput.value, 10);
       var maxAllowed = unit === 'juz' ? 30 : TOTAL_PAGES;
       if (!customVal || customVal < 1 || customVal > maxAllowed){
-        showError('نقطة البداية يجب أن تكون رقماً بين ١ و' + toArabicDigits(maxAllowed) + '.');
+        showError('نقطة البداية يجب أن تكون رقماً بين ١ و' + maxAllowed + '.');
         return;
       }
       startIdx = unit === 'juz' ? ((customVal - 1) * 2 + 1) : customVal;
@@ -768,34 +828,15 @@
     });
   });
 
-  /* ---------- rendering ---------- */
+  /* ---------- rendering the schedule table ---------- */
   function renderResults(sched){
-    var today = startOfDay(new Date());
-    var start = sched.startDate, end = sched.endDate;
-    var msPerDay = 86400000;
-    var totalSpan = Math.round((end - start) / msPerDay) + 1;
-    var elapsed = Math.round((today - start) / msPerDay) + 1;
-    var pct;
-    if (elapsed <= 0) pct = 0;
-    else if (elapsed >= totalSpan) pct = 100;
-    else pct = Math.round((elapsed / totalSpan) * 100);
-
-    /* crescent fill: bounding box y from 18 to 182 (height 164) inside viewbox */
-    var fillRect = $('fillRect');
-    var maxH = 164, baseY = 182;
-    var h = (pct / 100) * maxH;
-    fillRect.setAttribute('y', baseY - h);
-    fillRect.setAttribute('height', h);
-
-    $('pctText').textContent = toArabicDigits(pct) + '٪';
-    $('crescentLabel').textContent = pct >= 100 ? 'أتمَّ اللهُ ختمتك، تقبّل الله منك' : 'من الوقت المقرر للختمة';
-
     var unitLabel = sched.unit === 'juz' ? 'أجزاء' : 'صفحات';
-    var totalLabel = sched.unit === 'juz' ? '٣٠ جزءاً' : (toArabicDigits(TOTAL_PAGES) + ' صفحة');
-    $('summaryLine').textContent = 'من ' + fmtDate(start) + ' إلى ' + fmtDate(end);
-    $('summarySub').textContent = 'المدة: ' + toArabicDigits(sched.calendarDays.length) + ' يوماً (منها ' +
-      toArabicDigits(sched.readingDaysCount) + ' يوم قراءة فعلي) — تقسيم ' + unitLabel + ' — الإجمالي ' + totalLabel;
+    var totalLabel = sched.unit === 'juz' ? '٣٠ جزءاً' : (TOTAL_PAGES + ' صفحة');
+    $('summaryLine').textContent = 'من ' + fmtDate(sched.startDate) + ' إلى ' + fmtDate(sched.endDate);
+    $('summarySub').textContent = 'المدة: ' + sched.calendarDays.length + ' يوماً (منها ' +
+      sched.readingDaysCount + ' يوم قراءة فعلي) — تقسيم ' + unitLabel + ' — الإجمالي ' + totalLabel;
 
+    var today = startOfDay(new Date());
     var tbody = $('scheduleBody');
     tbody.innerHTML = '';
     sched.calendarDays.forEach(function(cd, i){
@@ -820,50 +861,128 @@
       var statusIcon = isToday ? '●' : (isPast ? '✓' : '');
 
       tr.innerHTML =
-        '<td>' + toArabicDigits(i + 1) + '</td>' +
+        '<td>' + (i + 1) + '</td>' +
         '<td>' + fmtDate(cd.date) + '</td>' +
         '<td class="amount-cell">' + amountText + '</td>' +
         '<td class="status-icon">' + statusIcon + '</td>';
       tbody.appendChild(tr);
     });
 
-    $('resultsCard').style.display = 'block';
-    $('results').classList.add('show');
-    $('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    hasGeneratedSchedule = true;
+    switchView('results');
   }
 
-  /* ---------- print / download ---------- */
+  /* ---------- print / PDF ---------- */
   $('printBtn').addEventListener('click', function(){ window.print(); });
+  $('pdfBtn').addEventListener('click', function(){ window.print(); });
 
-  $('downloadBtn').addEventListener('click', function(){
-    var tableHTML = document.querySelector('table.schedule').outerHTML;
-    var summary = $('summaryLine').textContent + ' — ' + $('summarySub').textContent;
-    var doc = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
-      '<title>جدول ختمة وقار</title><style>' +
-      'body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#1B2430;background:#fff;direction:rtl;}' +
-      'h1{color:#1B2430;} p.sum{color:#555;margin-bottom:20px;}' +
-      'table{width:100%;border-collapse:collapse;font-size:14px;}' +
-      'th,td{border:1px solid #ccc;padding:8px;text-align:center;}' +
-      'th{background:#1B2430;color:#C9A05C;}' +
-      'tr:nth-child(even){background:#faf6ec;}' +
-      '.footer{margin-top:24px;color:#888;font-size:13px;text-align:center;}' +
-      '</style></head><body>' +
-      '<h1>وقار — جدول ختمة القرآن</h1>' +
-      '<p class="sum">' + summary + '</p>' +
-      tableHTML +
-      '<p class="footer">صدقة جارية لوجه الله — تم إنشاؤه بالكامل في متصفحك دون تخزين أي بيانات.</p>' +
-      '</body></html>';
+  /* ---------- view switching ---------- */
+  function switchView(view){
+    $('waqarForm').style.display = view === 'form' ? '' : 'none';
+    $('resultsCard').style.display = view === 'results' ? 'block' : 'none';
+    $('trackerCard').style.display = view === 'tracker' ? 'block' : 'none';
+    $('trackerBanner').style.display = (view === 'form' && loadTrackerData()) ? 'flex' : 'none';
+    if (view === 'form') refreshBanner();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
-    var blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'جدول-ختمة-وقار.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  /* ---------- tracker: persistent 30-juz checklist ---------- */
+  function defaultTasks(){
+    var tasks = [];
+    for (var i = 1; i <= JUZ_COUNT; i++){ tasks.push({ juz: i, checked: false }); }
+    return tasks;
+  }
+  function loadTrackerData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.tasks)) return null;
+      return data;
+    }catch(e){ return null; }
+  }
+  function saveTrackerData(data){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+  }
+  function clearTrackerData(){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  }
+
+  function refreshBanner(){
+    var data = loadTrackerData();
+    var banner = $('trackerBanner');
+    if (!data){ banner.style.display = 'none'; return; }
+    var checked = data.tasks.filter(function(t){ return t.checked; }).length;
+    var pct = Math.round(checked / JUZ_COUNT * 100);
+    $('bannerText').textContent = 'لديك متتبع ختمة قيد التقدم — ' + pct + '٪ (' + checked + ' من ٣٠ جزءاً)';
+    banner.style.display = 'flex';
+  }
+
+  function openTracker(){
+    var data = loadTrackerData();
+    if (!data){ data = { tasks: defaultTasks() }; saveTrackerData(data); }
+    currentTrackerData = data;
+    renderTrackerView();
+    switchView('tracker');
+  }
+
+  function updateProgressUI(){
+    var checked = currentTrackerData.tasks.filter(function(t){ return t.checked; }).length;
+    var pct = Math.round(checked / JUZ_COUNT * 100);
+    var fillRect = $('fillRect');
+    var maxH = 164, baseY = 182;
+    var h = (pct / 100) * maxH;
+    fillRect.setAttribute('y', baseY - h);
+    fillRect.setAttribute('height', h);
+    $('pctText').textContent = pct + '٪';
+    $('crescentLabel').textContent = checked + ' من ' + JUZ_COUNT + ' جزءاً مكتملة';
+  }
+
+  function renderTrackerView(){
+    var list = $('taskList');
+    list.innerHTML = '';
+    currentTrackerData.tasks.forEach(function(task, idx){
+      var row = document.createElement('label');
+      row.className = 'task-row' + (task.checked ? ' done' : '');
+      row.innerHTML =
+        '<input type="checkbox" data-idx="' + idx + '"' + (task.checked ? ' checked' : '') + '>' +
+        '<span>الجزء ' + task.juz + '</span>';
+      list.appendChild(row);
+    });
+    updateProgressUI();
+  }
+
+  $('taskList').addEventListener('change', function(e){
+    var input = e.target;
+    if (input.tagName !== 'INPUT') return;
+    var idx = parseInt(input.getAttribute('data-idx'), 10);
+    currentTrackerData.tasks[idx].checked = input.checked;
+    saveTrackerData(currentTrackerData);
+    input.closest('.task-row').classList.toggle('done', input.checked);
+    updateProgressUI();
   });
+
+  $('trackerBtn').addEventListener('click', openTracker);
+  $('bannerOpenBtn').addEventListener('click', openTracker);
+  $('bannerDeleteBtn').addEventListener('click', function(){
+    if (confirm('هل تريد حذف تقدّم المتتبع المحفوظ؟ لا يمكن التراجع عن هذا.')){
+      clearTrackerData();
+      refreshBanner();
+    }
+  });
+  $('backToScheduleBtn').addEventListener('click', function(){
+    switchView(hasGeneratedSchedule ? 'results' : 'form');
+  });
+  $('newKhatmaBtn').addEventListener('click', function(){
+    if (confirm('سيبدأ هذا متتبعاً جديداً بصفر أجزاء مكتملة. هل تريد المتابعة؟')){
+      currentTrackerData = { tasks: defaultTasks() };
+      saveTrackerData(currentTrackerData);
+      renderTrackerView();
+    }
+  });
+
+  /* ---------- init ---------- */
+  refreshBanner();
 
 })();
 </script>
