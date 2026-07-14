@@ -661,8 +661,16 @@
 (function(){
   "use strict";
 
-  var TOTAL_HIZB = 60;   // 30 juz × 2 hizb
   var JUZ_COUNT = 30;
+  /* adaptive granularity: coarsest first. quarter/hizb/juz stay exact fractions
+     of the 30 juz; page/halfpage are proportional approximations for very long plans. */
+  var LEVELS = [
+    { key: 'juz',      total: 30,   label: 'بالأجزاء' },
+    { key: 'hizb',     total: 60,   label: 'بالأحزاب' },
+    { key: 'quarter',  total: 240,  label: 'بأرباع الحزب' },
+    { key: 'page',     total: 604,  label: 'بالصفحات' },
+    { key: 'halfpage', total: 1208, label: 'بأنصاف الصفحات' }
+  ];
   var STORAGE_KEY = 'waqar_tracker_v1';
 
   var hasGeneratedSchedule = false;
@@ -751,21 +759,58 @@
     return x;
   }
 
-  function juzOfHizb(h){ return Math.ceil(h/2); }
-  function halfOfHizb(h){ return (h % 2 === 1) ? 1 : 2; }
+  /* pick the coarsest level whose remaining units still cover the reading days
+     (so almost every day gets a non-zero, cleanly-labeled portion) */
+  function pickLevel(startJuz, availableDays){
+    for (var i = 0; i < LEVELS.length; i++){
+      var lvl = LEVELS[i];
+      var startUnit = juzToLevelUnit(startJuz, lvl);
+      var remaining = lvl.total - startUnit + 1;
+      if (remaining >= availableDays || i === LEVELS.length - 1){
+        return { level: lvl, startUnit: startUnit, remaining: remaining };
+      }
+    }
+  }
 
-  function formatUnitRange(a, b){
-    var ja = juzOfHizb(a), jb = juzOfHizb(b);
-    if (a === b){
-      return 'نصف الجزء ' + ja + ' (' + (halfOfHizb(a) === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
+  function juzToLevelUnit(startJuz, lvl){
+    if (lvl.key === 'page' || lvl.key === 'halfpage'){
+      var frac = (startJuz - 1) / JUZ_COUNT;
+      return Math.round(frac * lvl.total) + 1;
     }
-    if ((b - a + 1) === 2 && halfOfHizb(a) === 1 && halfOfHizb(b) === 2 && ja === jb){
-      return 'الجزء ' + ja;
+    var perJuz = lvl.total / JUZ_COUNT; // 1, 2, or 8
+    return (startJuz - 1) * perJuz + 1;
+  }
+
+  function formatUnitRange(levelKey, a, b){
+    if (levelKey === 'juz'){
+      return a === b ? ('الجزء ' + a) : ('من الجزء ' + a + ' إلى الجزء ' + b);
     }
-    if (halfOfHizb(a) === 1 && halfOfHizb(b) === 2){
-      return 'من الجزء ' + ja + ' إلى الجزء ' + jb;
+    if (levelKey === 'hizb'){
+      var ja = Math.ceil(a / 2), jb = Math.ceil(b / 2);
+      var haf = (a % 2 === 1) ? 1 : 2, hbf = (b % 2 === 1) ? 1 : 2;
+      if (a === b) return 'نصف الجزء ' + ja + ' (' + (haf === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
+      if ((b - a + 1) === 2 && haf === 1 && hbf === 2 && ja === jb) return 'الجزء ' + ja;
+      if (haf === 1 && hbf === 2) return 'من الجزء ' + ja + ' إلى الجزء ' + jb;
+      return 'من نصف الجزء ' + ja + ' إلى نصف الجزء ' + jb;
     }
-    return 'من نصف الجزء ' + ja + ' إلى نصف الجزء ' + jb;
+    if (levelKey === 'quarter'){
+      var qja = Math.ceil(a / 8), qjb = Math.ceil(b / 8);
+      var qpa = ((a - 1) % 8) + 1, qpb = ((b - 1) % 8) + 1;
+      if (a === b) return 'الربع ' + qpa + ' من الجزء ' + qja;
+      if ((b - a + 1) === 8 && qpa === 1 && qpb === 8 && qja === qjb) return 'الجزء ' + qja;
+      if (qja === qjb) return 'من الربع ' + qpa + ' إلى الربع ' + qpb + ' من الجزء ' + qja;
+      return 'من الربع ' + qpa + ' (الجزء ' + qja + ') إلى الربع ' + qpb + ' (الجزء ' + qjb + ')';
+    }
+    if (levelKey === 'page'){
+      return a === b ? ('صفحة ' + a) : ('من صفحة ' + a + ' إلى صفحة ' + b);
+    }
+    /* halfpage */
+    var pa = Math.ceil(a / 2), pb = Math.ceil(b / 2);
+    var hfa = (a % 2 === 1) ? 1 : 2, hfb = (b % 2 === 1) ? 1 : 2;
+    if (a === b) return 'نصف الصفحة ' + pa + ' (' + (hfa === 1 ? 'الأول' : 'الثاني') + ')';
+    if ((b - a + 1) === 2 && hfa === 1 && hfb === 2 && pa === pb) return 'صفحة ' + pa;
+    if (hfa === 1 && hfb === 2) return 'من صفحة ' + pa + ' إلى صفحة ' + pb;
+    return 'من نصف الصفحة ' + pa + ' إلى نصف الصفحة ' + pb;
   }
 
   /* even spread distribution (Bresenham-style) across n slots summing to `remaining` */
@@ -813,17 +858,15 @@
     }
     var startDate = startOfDay(new Date(startDateVal + 'T00:00:00'));
 
-    var total = TOTAL_HIZB;
-
     var startPointVal = document.querySelector('input[name="startPoint"]:checked').value;
-    var startIdx = 1;
+    var startJuz = 1;
     if (startPointVal === 'custom'){
       var customVal = parseInt(customStartInput.value, 10);
       if (!customVal || customVal < 1 || customVal > 30){
         showError('نقطة البداية يجب أن تكون رقماً بين ١ و٣٠.');
         return;
       }
-      startIdx = (customVal - 1) * 2 + 1;
+      startJuz = customVal;
     }
 
     var excludedDays = new Set();
@@ -846,7 +889,10 @@
       return;
     }
 
-    var remaining = total - startIdx + 1;
+    var picked = pickLevel(startJuz, availableDays.length);
+    var level = picked.level;
+    var startIdx = picked.startUnit;
+    var remaining = picked.remaining;
     if (remaining < 1){
       showError('نقطة البداية تتجاوز نهاية القرآن الكريم.');
       return;
@@ -865,8 +911,7 @@
     });
 
     renderResults({
-      total: total,
-      startIdx: startIdx,
+      level: level,
       calendarDays: calendarDays,
       startDate: startDate,
       endDate: calendarDays[calendarDays.length - 1].date,
@@ -878,7 +923,7 @@
   function renderResults(sched){
     $('summaryLine').textContent = 'من ' + fmtDate(sched.startDate) + ' إلى ' + fmtDate(sched.endDate);
     $('summarySub').textContent = 'المدة: ' + sched.calendarDays.length + ' يوماً (منها ' +
-      sched.readingDaysCount + ' يوم قراءة فعلي) — الإجمالي ٣٠ جزءاً';
+      sched.readingDaysCount + ' يوم قراءة فعلي) — تقسيم المقدار اليومي: ' + sched.level.label;
 
     var today = startOfDay(new Date());
     var tbody = $('scheduleBody');
@@ -899,7 +944,7 @@
         tr.classList.add('is-rest');
         amountText = 'يوم مراجعة';
       } else {
-        amountText = formatUnitRange(cd.rangeStart, cd.rangeEnd);
+        amountText = formatUnitRange(sched.level.key, cd.rangeStart, cd.rangeEnd);
       }
 
       var statusIcon = isToday ? '●' : (isPast ? '✓' : '');
