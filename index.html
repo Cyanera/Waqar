@@ -638,6 +638,7 @@
           <label class="weekday-chip"><input type="checkbox" value="5" checked> الجمعة</label>
           <label class="weekday-chip"><input type="checkbox" value="6"> السبت</label>
         </div>
+        <p class="hint">هذه الأيام تُعتبر إجازة أسبوعية. بالإضافة لها، تتضمن الخطة تلقائياً: يوم مراجعة كل أسبوع، يوم مراجعة كل شهر، أسبوع مراجعة كل نصف سنة، وأسبوعين مراجعة كل سنة.</p>
       </section>
 
       <section class="card plan-preview" id="planPreview">
@@ -1047,11 +1048,35 @@
     return set;
   }
 
+  /* Built-in review cadence (fixed calendar-day counting from the plan's start,
+     independent of weekly holidays): every 7th day is a weekly review day,
+     every 30th a monthly one, the last 7 days of every 180-day block are a
+     half-year review week, and the last 14 days of every 360-day block are
+     the annual review. Longer cadence always wins on overlap. */
+  var REVIEW_LABELS = {
+    holiday:    'يوم إجازة أسبوعية',
+    annual:     'مراجعة سنوية (حفظ العام)',
+    semiannual: 'مراجعة نصف سنوية',
+    monthly:    'مراجعة شهرية (حفظ الشهر)',
+    weekly:     'مراجعة أسبوعية'
+  };
+  function classifyDay(dayIndex1Based, isHoliday){
+    if (isHoliday) return 'holiday';
+    var i = dayIndex1Based;
+    if (((i - 1) % 360) >= 346) return 'annual';
+    if (((i - 1) % 180) >= 173) return 'semiannual';
+    if (i % 30 === 0) return 'monthly';
+    if (i % 7 === 0) return 'weekly';
+    return 'new';
+  }
+
   function buildCalendarDays(startDate, duration, excludedWeekdaySet){
     var days = [];
     for (var i = 0; i < duration; i++){
       var d = addDays(startDate, i);
-      days.push({ date: d, excluded: excludedWeekdaySet.has(d.getDay()) });
+      var isHoliday = excludedWeekdaySet.has(d.getDay());
+      var dayType = classifyDay(i + 1, isHoliday);
+      days.push({ date: d, dayType: dayType });
     }
     return days;
   }
@@ -1086,8 +1111,9 @@
 
     var excludedWeekdaySet = getExcludedWeekdaySet();
     var calendarDays = buildCalendarDays(startDate, duration, excludedWeekdaySet);
-    var availableDays = calendarDays.filter(function(cd){ return !cd.excluded; });
-    var excludedCount = calendarDays.length - availableDays.length;
+    var availableDays = calendarDays.filter(function(cd){ return cd.dayType === 'new'; });
+    var excludedCount = calendarDays.filter(function(cd){ return cd.dayType === 'holiday'; }).length;
+    var reviewDaysCount = calendarDays.length - availableDays.length - excludedCount;
 
     if (availableDays.length < 1){
       return { error: 'يجب اختيار يوم واحد على الأقل للحفظ أو القراءة.' };
@@ -1111,6 +1137,7 @@
       calendarDays: calendarDays,
       availableDays: availableDays,
       excludedCount: excludedCount,
+      reviewDaysCount: reviewDaysCount,
       level: level,
       startIdx: startIdx,
       remaining: remaining,
@@ -1136,8 +1163,9 @@
     var items = [
       ['نقطة البداية', startLabel],
       ['مدة الخطة الإجمالية', plan.duration + ' يوماً'],
-      ['أيام العمل الفعلية', plan.availableDays.length + ' يوماً'],
-      ['الأيام المستثناة', plan.excludedCount + ' يوماً'],
+      ['أيام الحفظ الجديد الفعلية', plan.availableDays.length + ' يوماً'],
+      ['أيام المراجعة المجدولة', plan.reviewDaysCount + ' يوماً'],
+      ['الأيام المستثناة (إجازة)', plan.excludedCount + ' يوماً'],
       ['الصفحات المتبقية', plan.remainingPages + ' صفحة'],
       ['المتوسط اليومي', '≈ ' + avgRounded + ' صفحة'],
       ['وحدة العرض المستخدمة', plan.level.label]
@@ -1187,6 +1215,7 @@
       startDate: plan.startDate,
       endDate: plan.endDate,
       readingDaysCount: plan.availableDays.length,
+      reviewDaysCount: plan.reviewDaysCount,
       tooLong: plan.tooLong
     });
   });
@@ -1195,7 +1224,7 @@
   function renderResults(sched){
     var line = 'من ' + fmtDate(sched.startDate) + ' إلى ' + fmtDate(sched.endDate);
     var sub = 'المدة: ' + sched.calendarDays.length + ' يوماً (منها ' +
-      sched.readingDaysCount + ' يوم قراءة فعلي) — تقسيم المقدار اليومي: ' + sched.level.label;
+      sched.readingDaysCount + ' يوم حفظ جديد، و' + sched.reviewDaysCount + ' يوم مراجعة) — تقسيم المقدار اليومي: ' + sched.level.label;
     $('summaryLine').textContent = line;
     $('summarySub').textContent = sub;
     $('printSummary').textContent = line + ' — ' + sub;
@@ -1220,9 +1249,9 @@
       if (isPast) tr.classList.add('is-past');
 
       var amountText;
-      if (cd.excluded){
+      if (cd.dayType !== 'new'){
         tr.classList.add('is-rest');
-        amountText = 'يوم راحة (مستثنى)';
+        amountText = REVIEW_LABELS[cd.dayType];
       } else if (!cd.amount){
         tr.classList.add('is-rest');
         amountText = 'يوم مراجعة';
