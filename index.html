@@ -550,16 +550,7 @@
       </section>
 
       <section class="card">
-        <h2><span class="num" aria-hidden="true">٢</span> وحدة التقسيم</h2>
-        <div class="pill-row" role="radiogroup" aria-label="وحدة التقسيم">
-          <button type="button" class="pill" id="unitJuzBtn" aria-pressed="true" data-unit="juz">بالأجزاء (٣٠ جزءاً)</button>
-          <button type="button" class="pill" id="unitPageBtn" aria-pressed="false" data-unit="page">بالصفحات (٦٠٤ صفحة)</button>
-        </div>
-        <p class="hint">طبعة حفص المدنية تقريباً (٦٠٤ صفحة).</p>
-      </section>
-
-      <section class="card">
-        <h2><span class="num" aria-hidden="true">٣</span> نقطة البداية</h2>
+        <h2><span class="num" aria-hidden="true">٢</span> نقطة البداية</h2>
         <div class="radio-row" role="radiogroup" aria-label="نقطة البداية">
           <label class="radio-opt">
             <input type="radio" name="startPoint" value="beginning" checked>
@@ -577,7 +568,7 @@
       </section>
 
       <section class="card">
-        <h2><span class="num" aria-hidden="true">٤</span> استثناء أيام (اختياري)</h2>
+        <h2><span class="num" aria-hidden="true">٣</span> استثناء أيام (اختياري)</h2>
         <label class="toggle-switch-row">
           <input type="checkbox" class="switch-input" id="excludeToggle">
           <span class="switch" aria-hidden="true"></span>
@@ -671,11 +662,9 @@
   "use strict";
 
   var TOTAL_HIZB = 60;   // 30 juz × 2 hizb
-  var TOTAL_PAGES = 604;
   var JUZ_COUNT = 30;
   var STORAGE_KEY = 'waqar_tracker_v1';
 
-  var state = { unit: 'juz' };
   var hasGeneratedSchedule = false;
   var currentTrackerData = null;
 
@@ -729,26 +718,7 @@
     startDateInput.value = iso;
   })();
 
-  /* ---------- unit toggle ---------- */
-  var unitJuzBtn = $('unitJuzBtn');
-  var unitPageBtn = $('unitPageBtn');
   var customStartInput = $('customStartInput');
-  var customStartLabel = $('customStartLabel');
-
-  function setUnit(unit){
-    state.unit = unit;
-    var isJuz = unit === 'juz';
-    unitJuzBtn.setAttribute('aria-pressed', isJuz ? 'true' : 'false');
-    unitPageBtn.setAttribute('aria-pressed', isJuz ? 'false' : 'true');
-    customStartLabel.textContent = isJuz ? 'ابدأ من الجزء رقم:' : 'ابدأ من الصفحة رقم:';
-    customStartInput.min = 1;
-    customStartInput.max = isJuz ? 30 : TOTAL_PAGES;
-    if (Number(customStartInput.value) > Number(customStartInput.max)) {
-      customStartInput.value = customStartInput.max;
-    }
-  }
-  unitJuzBtn.addEventListener('click', function(){ setUnit('juz'); });
-  unitPageBtn.addEventListener('click', function(){ setUnit('page'); });
 
   /* ---------- start point radios ---------- */
   var customStartWrap = $('customStartWrap');
@@ -784,10 +754,7 @@
   function juzOfHizb(h){ return Math.ceil(h/2); }
   function halfOfHizb(h){ return (h % 2 === 1) ? 1 : 2; }
 
-  function formatUnitRange(unit, a, b){
-    if (unit === 'page'){
-      return a === b ? ('صفحة ' + a) : ('من صفحة ' + a + ' إلى صفحة ' + b);
-    }
+  function formatUnitRange(a, b){
     var ja = juzOfHizb(a), jb = juzOfHizb(b);
     if (a === b){
       return 'نصف الجزء ' + ja + ' (' + (halfOfHizb(a) === 1 ? 'الحزب الأول' : 'الحزب الثاني') + ')';
@@ -846,19 +813,17 @@
     }
     var startDate = startOfDay(new Date(startDateVal + 'T00:00:00'));
 
-    var unit = state.unit;
-    var total = unit === 'juz' ? TOTAL_HIZB : TOTAL_PAGES;
+    var total = TOTAL_HIZB;
 
     var startPointVal = document.querySelector('input[name="startPoint"]:checked').value;
     var startIdx = 1;
     if (startPointVal === 'custom'){
       var customVal = parseInt(customStartInput.value, 10);
-      var maxAllowed = unit === 'juz' ? 30 : TOTAL_PAGES;
-      if (!customVal || customVal < 1 || customVal > maxAllowed){
-        showError('نقطة البداية يجب أن تكون رقماً بين ١ و' + maxAllowed + '.');
+      if (!customVal || customVal < 1 || customVal > 30){
+        showError('نقطة البداية يجب أن تكون رقماً بين ١ و٣٠.');
         return;
       }
-      startIdx = unit === 'juz' ? ((customVal - 1) * 2 + 1) : customVal;
+      startIdx = (customVal - 1) * 2 + 1;
     }
 
     var excludedDays = new Set();
@@ -900,7 +865,6 @@
     });
 
     renderResults({
-      unit: unit,
       total: total,
       startIdx: startIdx,
       calendarDays: calendarDays,
@@ -912,11 +876,9 @@
 
   /* ---------- rendering the schedule table ---------- */
   function renderResults(sched){
-    var unitLabel = sched.unit === 'juz' ? 'أجزاء' : 'صفحات';
-    var totalLabel = sched.unit === 'juz' ? '٣٠ جزءاً' : (TOTAL_PAGES + ' صفحة');
     $('summaryLine').textContent = 'من ' + fmtDate(sched.startDate) + ' إلى ' + fmtDate(sched.endDate);
     $('summarySub').textContent = 'المدة: ' + sched.calendarDays.length + ' يوماً (منها ' +
-      sched.readingDaysCount + ' يوم قراءة فعلي) — تقسيم ' + unitLabel + ' — الإجمالي ' + totalLabel;
+      sched.readingDaysCount + ' يوم قراءة فعلي) — الإجمالي ٣٠ جزءاً';
 
     var today = startOfDay(new Date());
     var tbody = $('scheduleBody');
@@ -937,7 +899,7 @@
         tr.classList.add('is-rest');
         amountText = 'يوم مراجعة';
       } else {
-        amountText = formatUnitRange(sched.unit, cd.rangeStart, cd.rangeEnd);
+        amountText = formatUnitRange(cd.rangeStart, cd.rangeEnd);
       }
 
       var statusIcon = isToday ? '●' : (isPast ? '✓' : '');
