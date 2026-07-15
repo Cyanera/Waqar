@@ -523,7 +523,94 @@
   .task-row input{width:20px;height:20px;flex:none;accent-color:var(--olive);}
   .task-row span{font-weight:700;font-size:.98rem;}
   .task-row.done{background:var(--olive-soft);border-color:#cfe0d6;}
-  .task-row.done span{color:var(--olive);text-decoration:line-through;text-decoration-thickness:2px;}
+  .task-row.done span:not(.auto-badge){color:var(--olive);text-decoration:line-through;text-decoration-thickness:2px;}
+  .task-row.auto-done input{pointer-events:none;}
+  .auto-badge{font-size:.68rem;background:var(--olive-soft);color:var(--olive-deep);padding:2px 9px;border-radius:10px;font-weight:800;margin-inline-start:auto;flex:none;}
+
+  /* ===== tracker tabs ===== */
+  .tracker-tabs{display:flex;gap:10px;justify-content:center;margin:4px 0 20px;}
+  .tab-btn{
+    border:1.5px solid var(--line);
+    background:#fff;
+    border-radius:24px;
+    padding:10px 24px;
+    font-weight:800;
+    font-family:inherit;
+    font-size:.95rem;
+    color:var(--slate);
+    cursor:pointer;
+  }
+  .tab-btn.active{background:var(--olive);border-color:var(--olive);color:#fff;}
+
+  /* ===== daily plan panel ===== */
+  .daily-progress-line{text-align:center;font-weight:800;color:var(--olive-deep);margin:0 0 16px;}
+  .month-group{border:1.5px solid var(--line);border-radius:14px;margin-bottom:12px;background:#fff;overflow:hidden;}
+  .month-group summary{
+    list-style:none;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 16px;
+    font-weight:800;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .month-group summary::-webkit-details-marker{display:none;}
+  .month-group summary::after{content:'▾';color:var(--slate);font-size:.8rem;margin-inline-start:8px;transition:transform .15s;}
+  .month-group[open] summary::after{transform:rotate(180deg);}
+  .month-progress{color:var(--olive);font-variant-numeric:tabular-nums;font-size:.9rem;margin-inline-start:auto;}
+  .month-group.month-done summary{color:var(--olive);}
+  .day-list{border-top:1px solid var(--line);}
+  .day-row{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .day-row:last-child{border-bottom:none;}
+  .day-row input{width:18px;height:18px;accent-color:var(--olive);margin-top:2px;flex:none;cursor:pointer;}
+  .day-row-date{font-weight:800;font-size:.84rem;color:var(--ink);width:118px;flex:none;}
+  .day-row-label{font-size:.84rem;color:var(--slate);flex:1;line-height:1.7;}
+  .day-row.done{background:var(--olive-soft);}
+  .day-row.done .day-row-date, .day-row.done .day-row-label{color:var(--olive);text-decoration:line-through;text-decoration-thickness:1.5px;}
+  .day-row.today{background:#FBF3E2;}
+  .day-row.rest{opacity:.6;cursor:default;font-style:italic;}
+  .day-row.review-day .day-row-label{color:var(--olive-deep);font-weight:700;}
+  .daily-empty{text-align:center;color:var(--slate);padding:22px 10px;line-height:2;}
+
+  /* ===== celebration ===== */
+  .celebrate-dot{
+    position:fixed;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:999;
+    animation:dotfly .8s ease-out forwards;
+  }
+  @keyframes dotfly{
+    from{transform:translate(0,0) scale(1);opacity:1;}
+    to{transform:translate(var(--dx), var(--dy)) scale(.3);opacity:0;}
+  }
+  .waqar-toast{
+    position:fixed;
+    bottom:26px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--olive-deep);
+    color:#fff;
+    padding:12px 26px;
+    border-radius:26px;
+    font-weight:800;
+    font-size:.95rem;
+    z-index:1000;
+    box-shadow:0 8px 24px rgba(0,0,0,.22);
+    animation:toastfade 2.8s forwards;
+    white-space:nowrap;
+  }
+  @keyframes toastfade{
+    0%{opacity:0;}
+    12%,78%{opacity:1;}
+    100%{opacity:0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .celebrate-dot{display:none;}
+    .waqar-toast{animation:none;}
+  }
 
   footer.site{
     text-align:center;
@@ -715,6 +802,12 @@
     <section class="card" id="trackerCard" style="display:none;">
       <h2 style="justify-content:center;"><span class="num" aria-hidden="true">◈</span> متتبع الختمة</h2>
 
+      <div class="tracker-tabs" role="tablist" aria-label="طريقة التتبع">
+        <button type="button" class="tab-btn active" id="tabJuzBtn" role="tab" aria-selected="true">حسب الأجزاء</button>
+        <button type="button" class="tab-btn" id="tabDailyBtn" role="tab" aria-selected="false">الخطة اليومية</button>
+      </div>
+
+      <div id="juzPanel" role="tabpanel">
       <div class="crescent-wrap">
         <svg class="crescent-svg" viewBox="0 0 200 180" aria-hidden="true">
           <defs>
@@ -741,6 +834,12 @@
       </div>
 
       <div class="task-list" id="taskList"></div>
+      </div>
+
+      <div id="dailyPanel" role="tabpanel" style="display:none;">
+        <p class="daily-progress-line" id="dailyProgressLine"></p>
+        <div id="dailyPlanContainer"></div>
+      </div>
 
       <div class="results-actions">
         <button type="button" class="btn-secondary" id="backToScheduleBtn">عودة للجدول</button>
@@ -813,6 +912,11 @@
     var x = new Date(d);
     x.setHours(0,0,0,0);
     return x;
+  }
+  /* local-timezone YYYY-MM-DD (never toISOString, which shifts across UTC) */
+  function isoDate(d){
+    var m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
   }
   /* real calendar arithmetic — no 30-day/365-day approximation */
   function addCalendar(date, y, m, d){
@@ -983,6 +1087,35 @@
   function hizbStartAyah(hizbIdx){ return QUARTER_START[(hizbIdx - 1) * 4]; }
   function hizbEndAyah(hizbIdx){ return QUARTER_END[hizbIdx * 4 - 1]; }
 
+  /* first/last ayah reference of a unit at any granularity level */
+  function unitStartRef(levelKey, u){
+    if (levelKey === 'juz') return JUZ_START_AYAH[u - 1];
+    if (levelKey === 'hizb') return hizbStartAyah(u);
+    if (levelKey === 'quarter') return QUARTER_START[u - 1];
+    if (levelKey === 'page') return PAGE_START[u - 1];
+    if (levelKey === 'halfpage') return (u % 2 === 1) ? PAGE_START[Math.ceil(u / 2) - 1] : PAGE_MID[Math.ceil(u / 2) - 1];
+    return AYAH_REF[u - 1];
+  }
+  function unitEndRef(levelKey, u){
+    if (levelKey === 'juz') return JUZ_END_AYAH[u - 1];
+    if (levelKey === 'hizb') return hizbEndAyah(u);
+    if (levelKey === 'quarter') return QUARTER_END[u - 1];
+    if (levelKey === 'page') return PAGE_END[u - 1];
+    if (levelKey === 'halfpage') return (u % 2 === 1) ? PAGE_BEFORE_MID[Math.ceil(u / 2) - 1] : PAGE_END[Math.ceil(u / 2) - 1];
+    return AYAH_REF[u - 1];
+  }
+  /* [surah, ayah] -> global ayah index 1..6236 (lazy-built lookup) */
+  var _globalAyahMap = null;
+  function globalOfRef(ref){
+    if (!_globalAyahMap){
+      _globalAyahMap = {};
+      for (var gi = 0; gi < AYAH_REF.length; gi++){
+        _globalAyahMap[AYAH_REF[gi][0] + '|' + AYAH_REF[gi][1]] = gi + 1;
+      }
+    }
+    return _globalAyahMap[ref[0] + '|' + ref[1]] || null;
+  }
+
   /* every level always names the exact ayah range; juz/hizb/quarter also keep
      their traditional label as context, page/halfpage are pure ayah ranges */
   function formatUnitRange(levelKey, a, b){
@@ -1010,17 +1143,9 @@
       else qLabel = 'من الربع ' + qpa + ' (الجزء ' + qja + ') إلى الربع ' + qpb + ' (الجزء ' + qjb + ')';
       return qLabel + ' (' + ayahRangeLabel(QUARTER_START[a - 1], QUARTER_END[b - 1]) + ')';
     }
-    if (levelKey === 'page'){
-      return ayahRangeLabel(PAGE_START[a - 1], PAGE_END[b - 1]);
-    }
-    if (levelKey === 'halfpage'){
-      /* split each page at its middle ayah instead of an arbitrary half */
-      var startRef = (a % 2 === 1) ? PAGE_START[Math.ceil(a / 2) - 1] : PAGE_MID[Math.ceil(a / 2) - 1];
-      var endRef = (b % 2 === 1) ? PAGE_BEFORE_MID[Math.ceil(b / 2) - 1] : PAGE_END[Math.ceil(b / 2) - 1];
-      return ayahRangeLabel(startRef, endRef);
-    }
-    /* ayah: finest level, for plans so long even half a page/day is too much */
-    return ayahRangeLabel(AYAH_REF[a - 1], AYAH_REF[b - 1]);
+    /* page/halfpage/ayah: pure ayah ranges (halfpage splits at the page's
+       real middle ayah instead of an arbitrary half) */
+    return ayahRangeLabel(unitStartRef(levelKey, a), unitEndRef(levelKey, b));
   }
 
   function ayahLabel(ref){
@@ -1302,7 +1427,9 @@
       endDate: plan.endDate,
       readingDaysCount: plan.availableDays.length,
       reviewDaysCount: plan.reviewDaysCount,
-      tooLong: plan.tooLong
+      tooLong: plan.tooLong,
+      sig: [isoDate(plan.startDate), plan.duration, plan.startJuz, plan.level.key,
+            Array.from(getExcludedWeekdaySet()).sort().join(',')].join('|')
     });
   });
 
@@ -1326,6 +1453,7 @@
     var today = startOfDay(new Date());
     var tbody = $('scheduleBody');
     tbody.innerHTML = '';
+    var planDays = [];
     sched.calendarDays.forEach(function(cd, i){
       var tr = document.createElement('tr');
       var dayDate = startOfDay(cd.date);
@@ -1348,6 +1476,18 @@
         amountText = formatUnitRange(sched.level.key, cd.rangeStart, cd.rangeEnd);
       }
 
+      var entry = {
+        d: isoDate(cd.date),
+        t: (cd.dayType === 'new' && !cd.amount) ? 'filler' : cd.dayType,
+        l: amountText,
+        n: i + 1
+      };
+      if (cd.dayType === 'new' && cd.amount){
+        entry.g1 = globalOfRef(unitStartRef(sched.level.key, cd.rangeStart));
+        entry.g2 = globalOfRef(unitEndRef(sched.level.key, cd.rangeEnd));
+      }
+      planDays.push(entry);
+
       var statusIcon = isToday ? '●' : (isPast ? '✓' : '');
 
       tr.innerHTML =
@@ -1357,6 +1497,8 @@
         '<td class="status-icon">' + statusIcon + '</td>';
       tbody.appendChild(tr);
     });
+
+    savePlanToTracker(sched.sig, planDays);
 
     hasGeneratedSchedule = true;
     switchView('results');
@@ -1593,19 +1735,31 @@
     switchView('form');
   });
 
-  /* ---------- tracker: persistent 30-juz checklist ---------- */
-  function defaultTasks(){
-    var tasks = [];
-    for (var i = 1; i <= JUZ_COUNT; i++){ tasks.push({ juz: i, checked: false }); }
-    return tasks;
+  /* ---------- tracker v2: juz checklist + daily-plan checklist, linked ---------- */
+  function defaultTrackerData(){
+    var manual = [];
+    for (var i = 0; i < JUZ_COUNT; i++) manual.push(false);
+    return { v: 2, juzManual: manual, plan: null };
   }
   function loadTrackerData(){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       var data = JSON.parse(raw);
-      if (!data || !Array.isArray(data.tasks)) return null;
-      return data;
+      if (!data) return null;
+      if (data.v === 2 && Array.isArray(data.juzManual)){
+        while (data.juzManual.length < JUZ_COUNT) data.juzManual.push(false);
+        if (data.plan && (!Array.isArray(data.plan.days) || !Array.isArray(data.plan.checked))) data.plan = null;
+        return data;
+      }
+      /* migrate v1 ({tasks:[{juz,checked}]}) */
+      if (Array.isArray(data.tasks)){
+        var v2 = defaultTrackerData();
+        data.tasks.forEach(function(t, i){ if (i < JUZ_COUNT) v2.juzManual[i] = !!t.checked; });
+        saveTrackerData(v2);
+        return v2;
+      }
+      return null;
     }catch(e){ return null; }
   }
   function saveTrackerData(data){
@@ -1615,11 +1769,61 @@
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
   }
 
+  /* called on every schedule generation: same plan keeps its progress,
+     a different plan starts with fresh checkboxes */
+  function savePlanToTracker(sig, days){
+    var data = loadTrackerData() || defaultTrackerData();
+    if (!(data.plan && data.plan.sig === sig && data.plan.days.length === days.length)){
+      data.plan = { sig: sig, days: days, checked: days.map(function(){ return false; }) };
+    } else {
+      data.plan.days = days;
+    }
+    saveTrackerData(data);
+    currentTrackerData = data;
+  }
+
+  /* ----- linking: a juz auto-checks when every plan day touching it is checked ----- */
+  function juzOfGlobal(g){
+    for (var j = JUZ_COUNT; j >= 1; j--){
+      if (g >= JUZ_START_GLOBAL_AYAH[j - 1]) return j;
+    }
+    return 1;
+  }
+  function computeAutoJuz(plan){
+    var auto = [];
+    for (var i = 0; i < JUZ_COUNT; i++) auto.push(false);
+    if (!plan || !plan.days) return auto;
+    var touched = {}, allChecked = {};
+    var covStart = null;
+    plan.days.forEach(function(day, di){
+      if (!day.g1 || !day.g2) return;
+      if (covStart === null || day.g1 < covStart) covStart = day.g1;
+      var j1 = juzOfGlobal(day.g1), j2 = juzOfGlobal(day.g2);
+      for (var j = j1; j <= j2; j++){
+        touched[j] = true;
+        if (!plan.checked[di]) allChecked[j] = false;
+      }
+    });
+    for (var j2i = 1; j2i <= JUZ_COUNT; j2i++){
+      /* the plan must cover the juz from its very first ayah (plans always
+         run to the end of the mushaf, so start coverage is the only gate) */
+      if (touched[j2i] && allChecked[j2i] !== false &&
+          covStart !== null && covStart <= JUZ_START_GLOBAL_AYAH[j2i - 1]){
+        auto[j2i - 1] = true;
+      }
+    }
+    return auto;
+  }
+  function unionJuzChecked(data){
+    var auto = computeAutoJuz(data.plan);
+    return data.juzManual.map(function(m, i){ return m || auto[i]; });
+  }
+
   function refreshBanner(){
     var data = loadTrackerData();
     var banner = $('trackerBanner');
     if (!data){ banner.style.display = 'none'; return; }
-    var checked = data.tasks.filter(function(t){ return t.checked; }).length;
+    var checked = unionJuzChecked(data).filter(Boolean).length;
     var pct = Math.round(checked / JUZ_COUNT * 100);
     $('bannerText').textContent = 'لديك متتبع ختمة قيد التقدم — ' + pct + '٪ (' + checked + ' من ٣٠ جزءاً)';
     banner.style.display = 'flex';
@@ -1627,14 +1831,14 @@
 
   function openTracker(){
     var data = loadTrackerData();
-    if (!data){ data = { tasks: defaultTasks() }; saveTrackerData(data); }
+    if (!data){ data = defaultTrackerData(); saveTrackerData(data); }
     currentTrackerData = data;
     renderTrackerView();
     switchView('tracker');
   }
 
   function updateProgressUI(){
-    var checked = currentTrackerData.tasks.filter(function(t){ return t.checked; }).length;
+    var checked = unionJuzChecked(currentTrackerData).filter(Boolean).length;
     var pct = Math.round(checked / JUZ_COUNT * 100);
     var fillRect = $('fillRect');
     var maxH = 128, baseY = 164;
@@ -1645,28 +1849,213 @@
     $('crescentLabel').textContent = checked + ' من ' + JUZ_COUNT + ' جزءاً مكتملة';
   }
 
+  /* ----- celebration ----- */
+  var CELEBRATE_COLORS = ['#4A6D5C', '#C9A05C', '#9CC0AE', '#3A5548', '#E4C98A'];
+  function celebrate(x, y, big){
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var n = big ? 26 : 13;
+    for (var i = 0; i < n; i++){
+      var dot = document.createElement('span');
+      dot.className = 'celebrate-dot';
+      var size = 5 + Math.random() * 6;
+      var ang = Math.random() * Math.PI * 2;
+      var dist = (big ? 70 : 42) + Math.random() * (big ? 90 : 45);
+      dot.style.width = size + 'px';
+      dot.style.height = size + 'px';
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      dot.style.background = CELEBRATE_COLORS[i % CELEBRATE_COLORS.length];
+      dot.style.setProperty('--dx', (Math.cos(ang) * dist) + 'px');
+      dot.style.setProperty('--dy', (Math.sin(ang) * dist - 28) + 'px');
+      dot.addEventListener('animationend', function(){ this.remove(); });
+      document.body.appendChild(dot);
+    }
+  }
+  function celebrateAt(el, big){
+    var r = el.getBoundingClientRect();
+    celebrate(r.left + r.width / 2, r.top + r.height / 2, big);
+  }
+  function showToast(msg){
+    var t = document.createElement('div');
+    t.className = 'waqar-toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2900);
+  }
+
+  /* ----- rendering ----- */
   function renderTrackerView(){
-    var list = $('taskList');
-    list.innerHTML = '';
-    currentTrackerData.tasks.forEach(function(task, idx){
-      var row = document.createElement('label');
-      row.className = 'task-row' + (task.checked ? ' done' : '');
-      row.innerHTML =
-        '<input type="checkbox" data-idx="' + idx + '"' + (task.checked ? ' checked' : '') + '>' +
-        '<span>الجزء ' + task.juz + '</span>';
-      list.appendChild(row);
-    });
+    renderJuzPanel();
+    renderDailyPanel();
     updateProgressUI();
   }
+
+  function renderJuzPanel(){
+    var list = $('taskList');
+    var auto = computeAutoJuz(currentTrackerData.plan);
+    list.innerHTML = '';
+    for (var i = 0; i < JUZ_COUNT; i++){
+      var manual = currentTrackerData.juzManual[i];
+      var isAuto = auto[i];
+      var checked = manual || isAuto;
+      var row = document.createElement('label');
+      row.className = 'task-row' + (checked ? ' done' : '') + (isAuto && !manual ? ' auto-done' : '');
+      row.innerHTML =
+        '<input type="checkbox" data-idx="' + i + '"' + (checked ? ' checked' : '') +
+        (isAuto && !manual ? ' disabled title="مكتمل تلقائياً من الخطة اليومية"' : '') + '>' +
+        '<span>الجزء ' + (i + 1) + '</span>' +
+        (isAuto && !manual ? '<span class="auto-badge">من الخطة ✓</span>' : '');
+      list.appendChild(row);
+    }
+  }
+
+  var _dayFmt = null, _monthFmt = null;
+  function dayFmt(){ if (!_dayFmt) _dayFmt = new Intl.DateTimeFormat('ar-u-nu-latn', { weekday: 'long', day: 'numeric', month: 'long' }); return _dayFmt; }
+  function monthFmt(){ if (!_monthFmt) _monthFmt = new Intl.DateTimeFormat('ar-u-nu-latn', { month: 'long', year: 'numeric' }); return _monthFmt; }
+  function dateOfIso(iso){
+    var p = iso.split('-');
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+
+  function dailyMonthStats(plan, monthKey){
+    var total = 0, done = 0;
+    plan.days.forEach(function(day, di){
+      if (day.d.slice(0, 7) !== monthKey || day.t === 'holiday') return;
+      total++;
+      if (plan.checked[di]) done++;
+    });
+    return { total: total, done: done };
+  }
+  function updateDailyProgressLine(){
+    var plan = currentTrackerData.plan;
+    if (!plan) return;
+    var total = 0, done = 0;
+    plan.days.forEach(function(day, di){
+      if (day.t === 'holiday') return;
+      total++;
+      if (plan.checked[di]) done++;
+    });
+    $('dailyProgressLine').textContent = 'أنجزت ' + done + ' من ' + total + ' يوماً';
+  }
+
+  function renderDailyPanel(){
+    var container = $('dailyPlanContainer');
+    var plan = currentTrackerData.plan;
+    container.innerHTML = '';
+    if (!plan){
+      $('dailyProgressLine').textContent = '';
+      container.innerHTML =
+        '<div class="daily-empty">لا توجد خطة يومية بعد.<br>أنشئ جدول ختمة من الصفحة الرئيسية وسيظهر هنا يوماً بيوم.</div>';
+      return;
+    }
+    updateDailyProgressLine();
+
+    var todayIso = isoDate(new Date());
+    var monthKeys = [], monthDays = {};
+    plan.days.forEach(function(day, di){
+      var mk = day.d.slice(0, 7);
+      if (!monthDays[mk]){ monthDays[mk] = []; monthKeys.push(mk); }
+      monthDays[mk].push(di);
+    });
+    var openKey = monthKeys.indexOf(todayIso.slice(0, 7)) !== -1 ? todayIso.slice(0, 7) : monthKeys[0];
+
+    monthKeys.forEach(function(mk){
+      var det = document.createElement('details');
+      det.className = 'month-group';
+      det.setAttribute('data-month', mk);
+      if (mk === openKey) det.open = true;
+      var stats = dailyMonthStats(plan, mk);
+      if (stats.total > 0 && stats.done === stats.total) det.classList.add('month-done');
+      var monthName = monthFmt().format(dateOfIso(mk + '-01'));
+      var summary = document.createElement('summary');
+      summary.innerHTML = '<span>' + monthName + '</span>' +
+        '<span class="month-progress" data-mp="' + mk + '">' + stats.done + '/' + stats.total + '</span>';
+      det.appendChild(summary);
+
+      var listEl = document.createElement('div');
+      listEl.className = 'day-list';
+      monthDays[mk].forEach(function(di){
+        var day = plan.days[di];
+        var dateTxt = dayFmt().format(dateOfIso(day.d));
+        if (day.t === 'holiday'){
+          var rest = document.createElement('div');
+          rest.className = 'day-row rest' + (day.d === todayIso ? ' today' : '');
+          rest.innerHTML = '<span class="day-row-date">' + dateTxt + '</span>' +
+            '<span class="day-row-label">' + day.l + '</span>';
+          listEl.appendChild(rest);
+          return;
+        }
+        var row = document.createElement('label');
+        row.className = 'day-row' +
+          (plan.checked[di] ? ' done' : '') +
+          (day.d === todayIso ? ' today' : '') +
+          (day.t !== 'new' ? ' review-day' : '');
+        row.innerHTML =
+          '<input type="checkbox" data-di="' + di + '"' + (plan.checked[di] ? ' checked' : '') + '>' +
+          '<span class="day-row-date">' + dateTxt + '</span>' +
+          '<span class="day-row-label">' + day.l + '</span>';
+        listEl.appendChild(row);
+      });
+      det.appendChild(listEl);
+      container.appendChild(det);
+    });
+  }
+
+  /* ----- events ----- */
+  function switchTrackerTab(tab){
+    var juz = tab === 'juz';
+    $('tabJuzBtn').classList.toggle('active', juz);
+    $('tabDailyBtn').classList.toggle('active', !juz);
+    $('tabJuzBtn').setAttribute('aria-selected', juz ? 'true' : 'false');
+    $('tabDailyBtn').setAttribute('aria-selected', !juz ? 'true' : 'false');
+    $('juzPanel').style.display = juz ? '' : 'none';
+    $('dailyPanel').style.display = juz ? 'none' : '';
+  }
+  $('tabJuzBtn').addEventListener('click', function(){ switchTrackerTab('juz'); });
+  $('tabDailyBtn').addEventListener('click', function(){ switchTrackerTab('daily'); });
 
   $('taskList').addEventListener('change', function(e){
     var input = e.target;
     if (input.tagName !== 'INPUT') return;
     var idx = parseInt(input.getAttribute('data-idx'), 10);
-    currentTrackerData.tasks[idx].checked = input.checked;
+    currentTrackerData.juzManual[idx] = input.checked;
     saveTrackerData(currentTrackerData);
     input.closest('.task-row').classList.toggle('done', input.checked);
     updateProgressUI();
+    if (input.checked) celebrateAt(input, false);
+  });
+
+  $('dailyPlanContainer').addEventListener('change', function(e){
+    var input = e.target;
+    if (input.tagName !== 'INPUT') return;
+    var di = parseInt(input.getAttribute('data-di'), 10);
+    var plan = currentTrackerData.plan;
+    var autoBefore = computeAutoJuz(plan);
+    plan.checked[di] = input.checked;
+    saveTrackerData(currentTrackerData);
+
+    input.closest('.day-row').classList.toggle('done', input.checked);
+    var mk = plan.days[di].d.slice(0, 7);
+    var stats = dailyMonthStats(plan, mk);
+    var mp = document.querySelector('.month-progress[data-mp="' + mk + '"]');
+    if (mp) mp.textContent = stats.done + '/' + stats.total;
+    var mg = document.querySelector('.month-group[data-month="' + mk + '"]');
+    if (mg) mg.classList.toggle('month-done', stats.total > 0 && stats.done === stats.total);
+    updateDailyProgressLine();
+
+    var autoAfter = computeAutoJuz(plan);
+    renderJuzPanel();
+    updateProgressUI();
+
+    if (input.checked){
+      celebrateAt(input, false);
+      for (var j = 0; j < JUZ_COUNT; j++){
+        if (autoAfter[j] && !autoBefore[j] && !currentTrackerData.juzManual[j]){
+          celebrateAt(input, true);
+          showToast('ما شاء الله! أتممت الجزء ' + (j + 1) + ' 🎉');
+        }
+      }
+    }
   });
 
   $('trackerBtn').addEventListener('click', openTracker);
@@ -1682,8 +2071,11 @@
   });
   $('newKhatmaBtn').addEventListener('click', function(){
     if (confirm('سيبدأ هذا متتبعاً جديداً بصفر أجزاء مكتملة. هل تريد المتابعة؟')){
-      currentTrackerData = { tasks: defaultTasks() };
-      saveTrackerData(currentTrackerData);
+      var data = currentTrackerData || defaultTrackerData();
+      data.juzManual = defaultTrackerData().juzManual;
+      if (data.plan) data.plan.checked = data.plan.days.map(function(){ return false; });
+      currentTrackerData = data;
+      saveTrackerData(data);
       renderTrackerView();
     }
   });
