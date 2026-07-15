@@ -1272,6 +1272,30 @@
       cum += amt;
     });
 
+    /* a single-ayah page (page 48, ayat ad-dayn) cannot be split in half —
+       both of its halfpage units carry that same ayah. If a day boundary
+       lands between them the ayah would appear on two consecutive days, so
+       absorb the second half into the day that ends with the first half. */
+    if (plan.level.key === 'halfpage'){
+      var contentDays = plan.availableDays.filter(function(cd){ return cd.amount > 0; });
+      for (var ci = 0; ci + 1 < contentDays.length; ci++){
+        var curDay = contentDays[ci], nxtDay = contentDays[ci + 1];
+        if (nxtDay.rangeStart % 2 !== 0) continue;
+        var pg = nxtDay.rangeStart / 2;
+        var mid = PAGE_MID[pg - 1], beforeMid = PAGE_BEFORE_MID[pg - 1];
+        if (mid[0] === beforeMid[0] && mid[1] === beforeMid[1]){
+          curDay.rangeEnd += 1;
+          curDay.amount += 1;
+          if (nxtDay.rangeStart === nxtDay.rangeEnd){
+            nxtDay.amount = 0; /* nothing left for that day -> becomes a review filler */
+          } else {
+            nxtDay.rangeStart += 1;
+            nxtDay.amount -= 1;
+          }
+        }
+      }
+    }
+
     renderResults({
       level: plan.level,
       calendarDays: plan.calendarDays,
