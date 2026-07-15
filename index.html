@@ -1354,7 +1354,10 @@
      slices client-side (fast) instead of paying html2canvas's per-call
      overhead once per printed page. */
   var CANVAS_SCALE = 2;
-  var BATCH_PAGES = 15;
+  /* mobile Safari rejects canvases over ~16.7M pixels and silently paints
+     nothing — cap each capture's CSS height so width×height×scale² stays
+     safely below that on every browser */
+  var MAX_CAPTURE_CSS = 4600;
 
   function addCanvasAsPage(pdf, canvas, pageWidth, pageHeight, startNewPage){
     var imgWidth = pageWidth;
@@ -1452,24 +1455,39 @@
       /* pack rows into pages by actual cumulative height */
       var SAFETY_PX = 12;
       var groups = [];
+      var groupHeights = [];
       var current = [];
       var used = 0;
       var budget = pageHeightCss - titleBlockH - theadH - SAFETY_PX;
+      var extraH = titleBlockH + theadH;
       for (var r = 0; r < allRows.length; r++){
         if (current.length && used + rowHeights[r] > budget){
           groups.push(current);
+          groupHeights.push(used + extraH);
           current = [];
           used = 0;
           budget = pageHeightCss - theadH - SAFETY_PX;
+          extraH = theadH;
         }
         current.push(allRows[r]);
         used += rowHeights[r];
       }
-      if (current.length) groups.push(current);
+      if (current.length){
+        groups.push(current);
+        groupHeights.push(used + extraH);
+      }
 
       var pagesDone = 0;
-      for (var b = 0; b < groups.length; b += BATCH_PAGES){
-        var batch = groups.slice(b, b + BATCH_PAGES);
+      var b = 0;
+      while (b < groups.length){
+        /* batch as many page-groups per capture as fit under the canvas cap */
+        var batchEnd = b + 1;
+        var cum = groupHeights[b];
+        while (batchEnd < groups.length && cum + groupHeights[batchEnd] <= MAX_CAPTURE_CSS){
+          cum += groupHeights[batchEnd];
+          batchEnd++;
+        }
+        var batch = groups.slice(b, batchEnd);
         if (groups.length > 1){
           status.textContent = 'جاري تجهيز ملف PDF... (صفحة ' + (pagesDone + 1) + ' من ' + groups.length + ')';
         }
@@ -1501,6 +1519,7 @@
           addCanvasAsPage(pdf, pageCanvas, pageWidth, pageHeight, pagesDone > 0);
           pagesDone++;
         }
+        b = batchEnd;
       }
 
       clipEl.removeChild(staging);
