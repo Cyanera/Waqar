@@ -2014,15 +2014,56 @@
   $('tabJuzBtn').addEventListener('click', function(){ switchTrackerTab('juz'); });
   $('tabDailyBtn').addEventListener('click', function(){ switchTrackerTab('daily'); });
 
+  /* juz -> days: manually checking a juz marks every plan day that touches
+     it; unchecking clears them, except boundary days shared with another juz
+     that is still fully completed */
+  function juzGlobalEnd(j){
+    return j < JUZ_COUNT ? JUZ_START_GLOBAL_AYAH[j] - 1 : TOTAL_AYAHS;
+  }
+  function syncPlanDaysForJuz(j, checked){
+    var plan = currentTrackerData.plan;
+    if (!plan) return;
+    var js = JUZ_START_GLOBAL_AYAH[j - 1], je = juzGlobalEnd(j);
+    var othersDone = null;
+    if (!checked){
+      othersDone = unionJuzChecked(currentTrackerData);
+      othersDone[j - 1] = false;
+    }
+    plan.days.forEach(function(day, di){
+      if (!day.g1 || day.g2 < js || day.g1 > je) return; /* no overlap with juz j */
+      if (checked){
+        plan.checked[di] = true;
+      } else {
+        var keep = false;
+        for (var j2 = juzOfGlobal(day.g1); j2 <= juzOfGlobal(day.g2); j2++){
+          if (j2 !== j && othersDone[j2 - 1]){ keep = true; break; }
+        }
+        if (!keep) plan.checked[di] = false;
+      }
+    });
+  }
+
   $('taskList').addEventListener('change', function(e){
     var input = e.target;
     if (input.tagName !== 'INPUT') return;
     var idx = parseInt(input.getAttribute('data-idx'), 10);
     currentTrackerData.juzManual[idx] = input.checked;
+    syncPlanDaysForJuz(idx + 1, input.checked);
     saveTrackerData(currentTrackerData);
-    input.closest('.task-row').classList.toggle('done', input.checked);
+
+    /* rebuild both panels (day checks changed too), keeping open months */
+    var openKeys = Array.prototype.slice.call(document.querySelectorAll('.month-group[open]'))
+      .map(function(d){ return d.getAttribute('data-month'); });
+    renderJuzPanel();
+    renderDailyPanel();
+    if (openKeys.length){
+      document.querySelectorAll('.month-group').forEach(function(el){
+        el.open = openKeys.indexOf(el.getAttribute('data-month')) !== -1;
+      });
+    }
     updateProgressUI();
-    if (input.checked) celebrateAt(input, false);
+    var freshInput = document.querySelector('#taskList input[data-idx="' + idx + '"]');
+    if (input.checked) celebrateAt(freshInput || input, true);
   });
 
   $('dailyPlanContainer').addEventListener('change', function(e){
