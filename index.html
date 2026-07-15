@@ -439,6 +439,14 @@
     background:#fff;
     padding:24px;
   }
+  /* fixed layout so column widths (and therefore text wrapping and row
+     heights) are identical no matter which subset of rows a table holds —
+     the PDF paginator depends on measured row heights staying exact */
+  .print-export table.schedule{table-layout:fixed; min-width:0;}
+  .print-export table.schedule th:nth-child(1){width:9%;}
+  .print-export table.schedule th:nth-child(2){width:24%;}
+  .print-export table.schedule th:nth-child(3){width:57%;}
+  .print-export table.schedule th:nth-child(4){width:10%;}
   .print-title{
     font-family:"Thmanyah Serif Display","Cairo",sans-serif;
     font-weight:900;
@@ -1354,6 +1362,17 @@
     var imgData = canvas.toDataURL('image/jpeg', 0.92);
     if (startNewPage) pdf.addPage();
     pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+    /* safety net: pagination packs by measured row heights so a slice should
+       never exceed one page, but if it ever does, spill onto continuation
+       pages rather than silently clipping rows */
+    var heightLeft = imgHeight - pageHeight;
+    var position = 0;
+    while (heightLeft > 1){
+      position -= pageHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
   }
 
   /* crops a horizontal strip [sy, sy+sh) (in source-canvas pixels) into its own canvas */
@@ -1408,26 +1427,45 @@
       var cssPerPt = 760 / pageWidth;
       var pageHeightCss = pageHeight * cssPerPt;
 
-      /* measure real rendered heights (CSS px) to fit an exact row count per page */
+      /* measure the real rendered height of EVERY row — long ayah ranges wrap
+         to two or three lines, so rows differ in height and a fixed
+         rows-per-page count would overflow the page and clip the overflow */
       staging.innerHTML = titleHtml + summaryHtml;
       await nextFrame();
       var titleBlockH = staging.getBoundingClientRect().height;
-      staging.innerHTML = '<table class="schedule">' + theadHtml +
-        '<tbody><tr><td>1</td><td>1</td><td>1</td><td>1</td></tr></tbody></table>';
-      await nextFrame();
-      var theadH = staging.querySelector('thead').getBoundingClientRect().height;
-      var rowH = staging.querySelector('tbody tr').getBoundingClientRect().height;
-      var SAFETY = 0.96;
-      var rowsFirstPage = Math.max(1, Math.floor(((pageHeightCss - titleBlockH - theadH) * SAFETY) / rowH));
-      var rowsLaterPage = Math.max(1, Math.floor(((pageHeightCss - theadH) * SAFETY) / rowH));
 
-      var groups = [];
-      var idx = 0;
-      groups.push(allRows.slice(idx, idx + rowsFirstPage)); idx += rowsFirstPage;
-      while (idx < allRows.length){
-        groups.push(allRows.slice(idx, idx + rowsLaterPage));
-        idx += rowsLaterPage;
+      var MEASURE_CHUNK = 400;
+      var rowHeights = new Array(allRows.length);
+      var theadH = 0;
+      for (var m = 0; m < allRows.length; m += MEASURE_CHUNK){
+        var chunk = allRows.slice(m, m + MEASURE_CHUNK);
+        staging.innerHTML = '<table class="schedule">' + theadHtml + '<tbody>' +
+          chunk.map(function(tr){ return tr.outerHTML; }).join('') + '</tbody></table>';
+        await nextFrame();
+        theadH = staging.querySelector('thead').getBoundingClientRect().height;
+        var measured = staging.querySelectorAll('tbody tr');
+        for (var t = 0; t < measured.length; t++){
+          rowHeights[m + t] = measured[t].getBoundingClientRect().height;
+        }
       }
+
+      /* pack rows into pages by actual cumulative height */
+      var SAFETY_PX = 12;
+      var groups = [];
+      var current = [];
+      var used = 0;
+      var budget = pageHeightCss - titleBlockH - theadH - SAFETY_PX;
+      for (var r = 0; r < allRows.length; r++){
+        if (current.length && used + rowHeights[r] > budget){
+          groups.push(current);
+          current = [];
+          used = 0;
+          budget = pageHeightCss - theadH - SAFETY_PX;
+        }
+        current.push(allRows[r]);
+        used += rowHeights[r];
+      }
+      if (current.length) groups.push(current);
 
       var pagesDone = 0;
       for (var b = 0; b < groups.length; b += BATCH_PAGES){
@@ -1445,15 +1483,18 @@
         await nextFrame();
 
         var stagingTop = staging.getBoundingClientRect().top;
-        var totalCssHeight = staging.getBoundingClientRect().height;
         var tables = Array.prototype.slice.call(staging.querySelectorAll('table.schedule'));
-        var tableTops = tables.map(function(t){ return t.getBoundingClientRect().top - stagingTop; });
+        var tableRects = tables.map(function(t){
+          var rect = t.getBoundingClientRect();
+          return { top: rect.top - stagingTop, bottom: rect.bottom - stagingTop };
+        });
 
         var batchCanvas = await window.html2canvas(staging, { scale: CANVAS_SCALE, backgroundColor: '#ffffff' });
 
         for (var bi2 = 0; bi2 < batch.length; bi2++){
-          var startCss = tableTops[bi2];
-          var endCss = (bi2 + 1 < tableTops.length) ? tableTops[bi2 + 1] : totalCssHeight;
+          /* first page slice starts at 0 to include the title block */
+          var startCss = (b === 0 && bi2 === 0) ? 0 : tableRects[bi2].top;
+          var endCss = tableRects[bi2].bottom;
           var sy = Math.round(startCss * CANVAS_SCALE);
           var sh = Math.round((endCss - startCss) * CANVAS_SCALE);
           var pageCanvas = cropCanvas(batchCanvas, sy, sh);
